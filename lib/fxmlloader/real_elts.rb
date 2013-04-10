@@ -51,8 +51,12 @@ class InstanceDeclarationElement < ValueElement
 
       if (value == nil)
         begin
+          puts callz + "attemping it"
           #TODO: does this work?
           value = ReflectUtil.newInstance(type);
+          puts callz + "got taaatempt"
+          print callz
+          p value
         rescue InstantiationException => exception
           raise LoadException.new(exception);
         rescue IllegalAccessException => exception
@@ -355,14 +359,16 @@ end
 class PropertyElement < Element
   attr_accessor :name, :sourceType, :readOnly
 
-  # TODO: super
   def initialize(current, xmlStreamReader, loadListener, parentLoader, name,  sourceType)
 
-  @name = nil
-  @sourceType = nil
-  @readOnly = nil
+    @name = nil
+    @sourceType = nil
+    @readOnly = nil
     super(current, xmlStreamReader, loadListener, parentLoader)
-    p "Property Elt", name, sourceType
+    puts (callz) + "Property Elt"
+    puts callz + name
+    print callz
+    p sourceType
     if (parent == nil)
       raise LoadException.new("Invalid root element.");
     end
@@ -382,8 +388,10 @@ class PropertyElement < Element
 
       parentProperties = parent.getProperties();
       if (parent.isTyped())
+        puts (callz) +"it be typed"
         @readOnly = parent.getValueAdapter().read_only?(name);
       else
+        puts (callz) +"it be chedrk"
         # If the map already defines a value for the property, assume
         # that it is read-only
         @readOnly = parentProperties.has_key?(name);
@@ -394,10 +402,12 @@ class PropertyElement < Element
         if (value == nil)
           raise LoadException.new("Invalid property.");
         end
-
+        puts (callz) +"saving property #{name} => #{value}"
         updateValue(value);
       end
+      puts (callz) +"doneish"
     else
+      puts (callz) +"ITS READ OHLY"
       # The element represents a static property
       @readOnly = false;
     end
@@ -408,6 +418,7 @@ class PropertyElement < Element
   end
 
   def add( element)
+    puts ( callz) +"Adding #{element} to ===> #{name}"
     # Coerce the element to the list item type
     if (parent.isTyped())
       listType = parent.getValueAdapter().getGenericType(name);
@@ -419,6 +430,7 @@ class PropertyElement < Element
   end
 
   def set( value)
+    puts (callz) +"setting prope value #{name} ==> #{value}"
     # Update the value
     updateValue(value);
 
@@ -437,7 +449,7 @@ class PropertyElement < Element
   end
 
   def processAttribute( prefix,  localName,  value)
-
+puts (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
     if (!readOnly)
       raise LoadException.new("Attributes are not supported for writable property elements.");
     end
@@ -447,7 +459,7 @@ class PropertyElement < Element
 
   def processEndElement()
     super();
-
+puts (callz) +"ENDENDLT "
     if (readOnly)
       processInstancePropertyAttributes();
       processEventHandlerAttributes();
@@ -457,6 +469,7 @@ class PropertyElement < Element
   def processCharacters()
     if (!readOnly)
       text = xmlStreamReader.getText();
+      puts (callz) +"whitlespa"
       #TODO: normal regexes
       text = extraneousWhitespacePattern.matcher(text).replaceAll(" ");
 

@@ -47,7 +47,7 @@ class ValueElement < Element
       if (parent.isCollection())
         parent.add(value);
       else
-        parent = value
+        parent.set value
       end
     end
   end

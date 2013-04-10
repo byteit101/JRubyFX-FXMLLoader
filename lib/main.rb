@@ -311,8 +311,18 @@ class FxmlLoader
         end
 
 				type = getType(localName);
-        puts "stuff"
+        prefixz = @xmlStreamReader.getLocation().getLineNumber().to_s + ": "
+        numz = 1
+        pppn = @current
+        while pppn
+          numz+=1
+          pppn = pppn.parent
+        end
+        prefixz = (" " * numz) + prefixz
+        puts "#{prefixz}Creating new stuff"
+        print prefixz
         p localName
+        print prefixz
         p type
 
 				if type
@@ -601,3 +611,6 @@ rt = fx.load
 puts "IT DONE"
 p rt
 p fx.root
+p rt.children[0]
+p rt.children[0].get_right
+p rt.children[0].get_right.get_tabs

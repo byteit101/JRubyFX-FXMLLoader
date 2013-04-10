@@ -11,6 +11,10 @@ class BeanAdapter
   def []=(x, y)
     put(x, y)
   end
+
+  def read_only?(name)
+    isReadOnly(name)
+  end
 end
 class RubyWrapperBeanAdapter < BeanAdapter
 end

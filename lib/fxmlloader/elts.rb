@@ -21,6 +21,15 @@ class Element
     @staticPropertyElements = []
     @parentLoader = parentLoader
   end
+  def callz
+    numz = 1
+    pppn = @parent
+    while pppn
+      numz+=1
+      pppn = pppn.parent
+    end
+    (" " * numz) + @lineNumber.to_s + ": "
+  end
 
   def isCollection()
     # Return true if value is a list, or if the value's type defines
@@ -90,7 +99,8 @@ class Element
 
   def getValueAdapter()
     if (@valueAdapter == nil)
-      puts "trying to get it"
+      puts callz + "trying to get it"
+      print callz
       puts @value
       @valueAdapter = RubyWrapperBeanAdapter.new(@value);
     end
