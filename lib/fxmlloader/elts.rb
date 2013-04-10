@@ -419,19 +419,12 @@ class Element
               raise LoadException.new("No controller specified. ");
             end
 
-#            method = parentLoader.controller.method(attrValue)
-#
-#            if (method == nil)
-#              raise LoadException.new("Controller method \"" + attrValue + "\" not found.");
-#            end
-            localController = parentLoader.controller
-            eventHandler = EventHandler.new{ |eventArgs|
-              begin
-                localController.send(attrValue, eventArgs)
-              rescue NameError
-                puts "Warning: method #{attrValue} was not found on controller #{localController}"
-              end
-            }
+            #            method = parentLoader.controller.method(attrValue)
+            #
+            #            if (method == nil)
+            #              raise LoadException.new("Controller method \"" + attrValue + "\" not found.");
+            #            end
+            eventHandler = EventHandlerWrapper.new(parentLoader.controller, attrValue)
           end
 
         elsif (attrValue.start_with?(FXL::EXPRESSION_PREFIX))
@@ -503,5 +496,20 @@ class Attribute
     @name = paramString1;
     @sourceType = paramClass;
     @value = paramString2;
+  end
+end
+
+class EventHandlerWrapper
+  include EventHandler
+  def initialize(ctrl, funcName)
+    @ctrl = ctrl
+    @funcName = funcName
+  end
+  def handle(eventArgs)
+    begin
+      @ctrl.send(@funcName, eventArgs)
+    rescue NameError
+      puts "Warning: method #{@funcName} was not found on controller #{@ctrl}"
+    end
   end
 end
