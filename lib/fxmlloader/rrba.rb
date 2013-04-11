@@ -230,16 +230,10 @@ class RubyWrapperBeanAdapter
       p key, value, @bean
       raise PropertyNotFoundException.new("Property \"" + key + "\" does not exist"                + " or is read-only.");
     end
-    puts "begins"
     begin
       ty = getType(key)
-      puts "gtype"
-      p ty
       co = coerce(value, ty)
-      puts "coer"
-      p co
       setterMethod.invoke(@bean, co );
-      p "invok"
     rescue IllegalAccessException => exception
       p "issues1"
       p exception
@@ -363,31 +357,17 @@ class RubyWrapperBeanAdapter
     end
 
     coercedValue = nil;
-    puts "nonnil"
-    p value
-    p type
-    puts "and"
-    p value.respond_to?(:java_class)
-    puts "tttt"
-    #p value.respond_to?(:java_class) && value.java_class
-    puts "ohno"
-    puts value.respond_to?(:java_class) && !value.is_a?(EventHandlerWrapper)  && type.assignable_from?(value.java_class)
-    puts 373
-    puts type.enum?
-    puts 007
     if (value == nil)
-      puts "its be nil"
       # Null values can only be coerced to nil
       coercedValue = nil;
     elsif (value.is_a?(EventHandlerWrapper) && type == Java.javafx.event.EventHandler.java_class) || (value.respond_to?(:java_class) && !value.is_a?(EventHandlerWrapper) && type.assignable_from?(value.java_class))
-      puts "assignbl"
       # Value doesn't require coercion
       coercedValue = value;
     elsif !value.respond_to?(:java_class) && !type.enum?
-      puts "is enum from ruby"
       # its a ruby value
       dir = ->(x){x}
       to_x = ->(x){->(o){o.send(x)}}
+      to_dbl = ->(x){java.lang.Double.valueOf(x.to_s)}
       to_bool = ->(x){java.lang.Boolean.valueOf(x.to_s)}
       value_of = ->(x){type.ruby_class.valueOf(x.to_s)}
       mapper = {
@@ -395,8 +375,8 @@ class RubyWrapperBeanAdapter
         [Fixnum, java.lang.Integer.java_class] => dir,
         [Float, java.lang.Double.java_class] => dir,
         [Float, Java::double.java_class] => dir,
-        [String, Java::double.java_class] => to_x.call(:to_f),
-        [String, java.lang.Double.java_class] => to_x.call(:to_f),
+        [String, Java::double.java_class] => to_dbl,
+        [String, java.lang.Double.java_class] => to_dbl,
         [String, Java::int.java_class] => to_x.call(:to_i),
         [String,java.lang.Integer.java_class] => to_x.call(:to_i),
         [String, Java::boolean.java_class] => to_bool,
@@ -404,16 +384,12 @@ class RubyWrapperBeanAdapter
       }
       if mapper[[value.class, type]]
         coercedValue = mapper[[value.class, type]].call(value)
-        puts "Coerced  from to"
-        p value
-        p coercedValue
       else
         puts "!! Non-normal RUBY coerce (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}])"
         raise "oh no!"
       end
       # Ruby String :D
     elsif value.class ==  String && type.enum?
-      puts "its enum"
       if value[0] == value[0].downcase
         value = RubyWrapperBeansAdapter.toUpcase value;
       end
@@ -637,11 +613,7 @@ class RubyWrapperBeanAdapter
 
     # Invoke the setter
     begin
-      puts "About to INVOKE DA DUDE"
-      p target, value, setterMethod
-      p target.java_object
       getStaticSetterMethod(sourceType, key, valueClass, targetType, true).call(target.java_object, value);
-      puts "invoked"
     rescue InvocationTargetException => exception
       raise "RuntimeException.new(exception);"
     rescue IllegalAccessException => exception
@@ -713,8 +685,6 @@ class RubyWrapperBeanAdapter
     if (itemType.is_a? ParameterizedType)
       itemType = (itemType).getRawType();
     end
-    puts "Listem item type is for "
-    p listType, itemType
     return itemType;
   end
 

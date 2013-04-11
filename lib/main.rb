@@ -177,7 +177,6 @@ class FxmlLoader
 			while @xmlStreamReader.hasNext()
         puts "......"
         event = @xmlStreamReader.next();
-        p @xmlStreamReader
         puts "#{event} aout happened, dude"
 				case event
         when XMLStreamConstants::PROCESSING_INSTRUCTION
@@ -196,8 +195,6 @@ class FxmlLoader
           puts "processing chars"
           processCharacters
         end
-        p @xmlStreamReader
-        puts "#{event} just happened, dude"
       end
 		rescue XMLStreamException => exception
 			raise Exception.new(exception)
@@ -276,7 +273,6 @@ class FxmlLoader
 		unless @root
 			@root = @current.value;
     end
-    puts "Processed Start Element and got #{@root}"
   end
 
 	def createElement()
@@ -399,14 +395,12 @@ class FxmlLoader
   def processEndElement()
     puts "ending!!!!!!!!"
 		@current.processEndElement();
-puts @loadListener
 		if @loadListener
 			@loadListener.endElement(@current.value);
 		end
 
 		# Move up the stack
 		@current = @current.parent;
-    puts "current is now #{@current}"
 	end
 
 	def processCharacters()

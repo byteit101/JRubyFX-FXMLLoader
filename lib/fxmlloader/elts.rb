@@ -426,23 +426,17 @@ class Element
   end
 
   def processEventHandlerAttributes()
-    puts "events!"
-    p @eventHandlerAttributes
     if (@eventHandlerAttributes.length > 0 && !parentLoader.staticLoad)
       for attribute in @eventHandlerAttributes
         eventHandler = nil;
-puts "doing it now for"
-p attribute
         attrValue = attribute.value;
 
         if (attrValue.start_with?(FXL::CONTROLLER_METHOD_PREFIX))
           attrValue = attrValue[FXL::CONTROLLER_METHOD_PREFIX.length..-1]
-puts 429
           if (!attrValue.start_with?(FXL::CONTROLLER_METHOD_PREFIX))
             if (attrValue.length() == 0)
               raise LoadException.new("Missing controller method.");
             end
-puts 434
             if (parentLoader.controller == nil)
               puts "eek"
               raise LoadException.new("No controller specified. ");
@@ -453,16 +447,11 @@ puts 434
             #            if (method == nil)
             #              raise LoadException.new("Controller method \"" + attrValue + "\" not found.");
             #            end
-            puts "wrm"
-            p parentLoader
-            p attrValue
-            p parentLoader.controller
             eventHandler = EventHandlerWrapper.new(parentLoader.controller, attrValue)
           end
 
         elsif (attrValue.start_with?(FXL::EXPRESSION_PREFIX))
           attrValue = attrValue[FXL::EXPRESSION_PREFIX.length..-1]
-puts 449
           if (attrValue.length() == 0)
             raise LoadException.new("Missing expression reference.");
           end
@@ -473,7 +462,6 @@ puts 449
           end
 
         end
-puts 460
         if (eventHandler == nil)
           if (attrValue.length() == 0 || @scriptEngine == nil)
             raise LoadException.new("Error resolving " + attribute.name + "='" + attribute.value +
@@ -482,7 +470,6 @@ puts 460
 
           eventHandler = ScriptEventHandler.new(attrValue, @scriptEngine);
         end
-puts "469"
         # Add the handler
         if (eventHandler != nil)
 
@@ -490,15 +477,12 @@ puts "469"
         end
       end
     end
-    puts "event done"
   end
 
   def addEventHandler(attribute, eventHandler)
-puts "aaeehh"
     if (attribute.name.end_with?(FXL::CHANGE_EVENT_HANDLER_SUFFIX))
       i = FXL::EVENT_HANDLER_PREFIX.length();
       j = attribute.name.length() - FXL::CHANGE_EVENT_HANDLER_SUFFIX.length();
-puts "i j"
       if (i == j)
         if (@value.is_a? ObservableList)
           list =  @value;
@@ -511,7 +495,6 @@ puts "i j"
         end
       else
         key = attribute.name[i].downcase + attribute.name[i + 1, j]
-p 503
         propertyModel = getValueAdapter().getPropertyModel(key);
         if (propertyModel == nil)
           raise LoadException.new(@value.getClass().getName() + " does not define" + " a property model for \"" + key + "\".");
@@ -520,7 +503,6 @@ p 503
         propertyModel.addListener(PropertyChangeAdapter.new(@value,  eventHandler));
       end
     else
-      p 512
       getValueAdapter[attribute.name] =  eventHandler
     end
   end
