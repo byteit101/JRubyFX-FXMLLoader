@@ -54,6 +54,9 @@ class InstanceDeclarationElement < ValueElement
       value = (parentLoader.builderFactory == nil) ? nil : parentLoader.builderFactory.getBuilder(type);
       puts callz + "now using #{value.class}"
       if (value.is_a? Builder or (value.respond_to?(:java_object) && value.java_object.is_a?(Builder)))
+        begin
+          value.size
+        rescue java.lang.UnsupportedOperationException => ex
        puts "########################## WARNING #############################3"
         class << value
           def size
@@ -77,6 +80,7 @@ class InstanceDeclarationElement < ValueElement
             "something equally interesting...."
           end
         end
+      end
       end
       if (value == nil)
         begin
@@ -458,10 +462,24 @@ class PropertyElement < Element
 
   def add( element)
     puts ( callz) +"Adding #{element} to ===> #{name}"
+    print callz
+    p element
+    p element.class
+    p element.java_class
+    if element.class.inspect == "Java::JavaNet::URL"
+      # element = element.java_object
+    end
     # Coerce the element to the list item type
     if (parent.isTyped())
       listType = parent.getValueAdapter().getGenericType(name);
-      element = RubyWrapperBeanAdapter.coerce(element, RubyWrapperBeanAdapter.getListItemType(listType));
+      puts callz + "Typed and list type is #{listType}"
+      lit = RubyWrapperBeanAdapter.getListItemType(listType)
+# FIXME: HACK!
+    if element.class.inspect == "Java::JavaNet::URL"
+      lit = Java::java.lang.String.java_class
+    end
+
+      element = RubyWrapperBeanAdapter.coerce(element, lit);
     end
 
     # Add the item to the list

@@ -333,6 +333,10 @@ class RubyWrapperBeanAdapter
     end
 
     getterMethod = getGetterMethod(key);
+    puts "GOt getter method for #{key}"
+    p getterMethod
+    puts getterMethod
+
     return (getterMethod == nil) ? nil : getterMethod.return_type
   end
 
@@ -354,6 +358,13 @@ class RubyWrapperBeanAdapter
     if (type == nil)
       puts "WHAT!"
       raise "ArgumentError.new();"
+    end
+    if (value.class == Java::JavaObject)
+      puts "de-objectifying it!!!!"
+      p value.class
+      p value.java_class
+      p value.to_java
+      value = value.to_java
     end
 
     coercedValue = nil;
@@ -394,6 +405,10 @@ class RubyWrapperBeanAdapter
         value = RubyWrapperBeansAdapter.toUpcase value;
       end
       coercedValue = type.ruby_class.valueOf(value)
+    elsif value.respond_to?(:java_class) && value.java_class == Java::java.net.URL.java_class && type == Java::java.lang.String.java_class
+      # TODO: HACK!
+      puts "COnverting url to string"
+      coercedValue = value.to_s
     else
       puts "!! Non-normal coerce (#{value}, #{type}) (#{value.inspect}, #{type.inspect})"
       if (type == java.lang.Boolean.java_class || type == Boolean.TYPE)
@@ -509,7 +524,8 @@ class RubyWrapperBeanAdapter
         end
       end
     end
-
+    puts "Coerced #{value.class} into a #{coercedValue.class} for #{type}"
+    p value, coercedValue
     return coercedValue;
   end
 
@@ -685,6 +701,8 @@ class RubyWrapperBeanAdapter
     if (itemType.is_a? ParameterizedType)
       itemType = (itemType).getRawType();
     end
+    puts "Listem item type is for "
+    p listType, itemType
     return itemType;
   end
 
@@ -712,29 +730,41 @@ class RubyWrapperBeanAdapter
     itemType = nil;
 
     parentType = listType;
+    puts "searching for generic #{listType}"
     while (parentType != nil)
+      puts "Still not nill"
+      p parentType
       if (parentType.is_a? ParameterizedType)
+        puts "Parametratized type!"
         parameterizedType = parentType;
         rawType = parameterizedType.getRawType();
-
+        p rawType, parameterizedType
         if (List.java_class.assignable_from?(rawType))
           itemType = parameterizedType.getActualTypeArguments()[0];
+          puts "OOOOOHHH item type is #{itemType}"
+          p itemType
         end
 
         break;
       end
 
       classType = parentType;
+      puts "checinhg generic interfaces"
       genericInterfaces = classType.generic_interfaces();
 
       genericInterfaces.each do |genericInterface|
-
+puts "serarcing ingeraface"
+p genericInterface
         if (genericInterface.is_a? ParameterizedType)
           parameterizedType = genericInterface;
           interfaceType = parameterizedType.getRawType();
-
+puts "checking"
+            p parameterizedType, interfaceType
           if (List.java_class.assignable_from?(interfaceType.java_class)) || (List.java_class.assignable_from?(interfaceType.java_object))
             itemType = parameterizedType.getActualTypeArguments()[0];
+            puts "found it at "
+            p parameterizedType, interfaceType, itemType
+            p itemType.bounds
             break;
           end
         end
@@ -748,6 +778,8 @@ class RubyWrapperBeanAdapter
     end
 
     if (itemType != nil && itemType.is_a?(java.lang.reflect.TypeVariable))
+      puts 'aww shucks'
+      p itemType
       itemType = Java::java.lang.Object.java_class;
     end
 
