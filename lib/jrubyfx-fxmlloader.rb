@@ -614,11 +614,11 @@ require_relative 'fxmlloader/value_elts'
 require_relative 'fxmlloader/real_elts'
 require_relative 'fxmlloader/rrba' # its da ruby rappa bean adapta!
 
-fx = FxmlLoader.new(URL.new("file:///home/patrick/NetBeansProjects/FXMLLoader/lib/test.fxml"), FXTesterC.new)
-rt = fx.load
-puts "IT DONE"
-p rt
-p fx.root
-p rt.children[0]
-p rt.children[0].get_right
-p rt.children[0].get_right.get_tabs
+#fx = FxmlLoader.new(URL.new("file:///home/patrick/NetBeansProjects/FXMLLoader/lib/test.fxml"), FXTesterC.new)
+#rt = fx.load
+#puts "IT DONE"
+#p rt
+#p fx.root
+#p rt.children[0]
+#p rt.children[0].get_right
+#p rt.children[0].get_right.get_tabs

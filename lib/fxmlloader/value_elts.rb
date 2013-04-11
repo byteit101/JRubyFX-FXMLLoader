@@ -169,7 +169,7 @@ puts "parentS>AS"
         # set fx:id property value to Node.id only if Node.id was not
         # already set when processing start element attributes
         if (properties[idProperty.value] == nil)
-          puts callz + "saving ID property"
+          puts callz + "saving ID property #{idProperty.value}"
           properties[idProperty.value()]= @fx_id;
         end
       end

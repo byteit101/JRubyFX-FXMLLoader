@@ -532,8 +532,11 @@ class EventHandlerWrapper
       else
         @ctrl.send(@funcName)
       end
-    rescue NameError
+    rescue NameError => e
+      p e
       puts "Warning: method #{@funcName} was not found on controller #{@ctrl}"
+      p @funcName
+      p @ctrl
     end
   end
 end
