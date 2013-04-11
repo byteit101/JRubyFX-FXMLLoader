@@ -53,7 +53,7 @@ class InstanceDeclarationElement < ValueElement
     else
       value = (parentLoader.builderFactory == nil) ? nil : parentLoader.builderFactory.getBuilder(type);
       puts callz + "now using #{value.class}"
-      if (value.class.to_s == "Java::JavafxFxml::ObjectBuilder")
+      if (value.is_a? Builder or (value.respond_to?(:java_object) && value.java_object.is_a?(Builder)))
        puts "########################## WARNING #############################3"
         class << value
           def size
@@ -66,6 +66,9 @@ class InstanceDeclarationElement < ValueElement
           end
           def []=(x,y)
             put(x,y)
+          end
+          def has_key?(x)
+            containsKey(x)
           end
           def to_s
             "something interesting...."
@@ -245,17 +248,19 @@ end
 
 # Element representing a reference
 class ReferenceElement < ValueElement
-  source = nil;
+  attr_accessor :source
+  @source = nil;
 
   def processAttribute(prefix, localName, value)
-
+puts callz + "processing attrib"
+p prefix, localName, value
     if (prefix == nil)
       if (localName == (FXL::REFERENCE_SOURCE_ATTRIBUTE))
         if (loadListener != nil)
           loadListener.readInternalAttribute(localName, value);
         end
-
-        source = value;
+        puts callz + "SAVING SOURCES"
+        @source = value;
       else
         super(prefix, localName, value);
       end
@@ -269,12 +274,12 @@ class ReferenceElement < ValueElement
       raise LoadException.new(FXL::REFERENCE_SOURCE_ATTRIBUTE + " is required.");
     end
 
-    KeyPath path = KeyPath.parse(source);
-    if (!Expression.isDefined(namespace, path))
+    path = KeyPath.parse(source);
+    if (!Expression.isDefined(parentLoader.namespace, path))
       raise LoadException.new("Value \"" + source + "\" does not exist.");
     end
 
-    return Expression.get(namespace, path);
+    return Expression.get(parentLoader.namespace, path);
   end
 end
 

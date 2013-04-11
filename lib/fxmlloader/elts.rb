@@ -65,11 +65,11 @@ class Element
       list =  getProperties[defaultPropertyName]
 
       # Coerce the element to the list item type
-      if (!Map.java_class.isAssignableFrom(type))
+      if (!Map.java_class.assignable_from?(type))
         listType = @valueAdapter.getGenericType(defaultPropertyName);
         element = RubyWrapperBeanAdapter.coerce(element, RubyWrapperBeanAdapter.getListItemType(listType));
       end
-      list
+      list.to_java
     end.add(element)
   end
 
@@ -305,7 +305,7 @@ class Element
       end
       return aValue;
     elsif (aValue.start_with?(FXL::RELATIVE_PATH_PREFIX))
-      aValue = aValue.substring[FXL::RELATIVE_PATH_PREFIX.length..-1]
+      aValue = aValue[FXL::RELATIVE_PATH_PREFIX.length..-1]
       if (aValue.length == 0)
         raise LoadException.new("Missing relative path.");
       end
@@ -315,9 +315,11 @@ class Element
         return aValue;
       else
         begin
-          return (aValue[0] == '/') ? classLoader.getResource(aValue[1..-1]).to_s : URL.new(@location, aValue).to_s
+          return (aValue[0] == '/') ? classLoader.getResource(aValue[1..-1]).to_s : URL.new(parentLoader.location, aValue).to_s
         rescue MalformedURLException => e
-          puts (@location + "/" + aValue);
+          p e
+          puts "#{parentLoader.location} + /+ #{aValue}"
+          raise "whoops"
         end
       end
     elsif (aValue.start_with?(FXL::RESOURCE_KEY_PREFIX))

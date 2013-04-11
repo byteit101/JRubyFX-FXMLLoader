@@ -608,6 +608,7 @@ class FXTesterC
   end
 end
 
+require_relative 'fxmlloader/j8_keypath'
 require_relative 'fxmlloader/elts'
 require_relative 'fxmlloader/value_elts'
 require_relative 'fxmlloader/real_elts'
