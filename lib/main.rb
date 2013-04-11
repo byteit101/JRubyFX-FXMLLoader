@@ -94,12 +94,12 @@ com.sun.javafx.fxml.LoadListener
 com.sun.javafx.fxml.ObservableListChangeEvent
 com.sun.javafx.fxml.ObservableMapChangeEvent
 com.sun.javafx.fxml.PropertyChangeEvent
-com.sun.javafx.fxml.PropertyNotFoundException
 com.sun.javafx.fxml.expression.Expression
 java.net.MalformedURLException
 java.security.AccessController
 java.security.PrivilegedAction
 java.util.Locale
+java.lang.NoSuchMethodException
 java.util.StringTokenizer
 sun.reflect.misc.ConstructorUtil
 sun.reflect.misc.FieldUtil
@@ -175,24 +175,34 @@ class FxmlLoader
     # Parse the XML stream
 		begin
 			while @xmlStreamReader.hasNext()
+        puts "......"
         event = @xmlStreamReader.next();
+        p @xmlStreamReader
+        puts "#{event} aout happened, dude"
 				case event
         when XMLStreamConstants::PROCESSING_INSTRUCTION
+          puts "processing instr"
           processProcessingInstruction
         when XMLStreamConstants::COMMENT
+          puts "processing comment"
           processComment
         when XMLStreamConstants::START_ELEMENT
+          puts "processing start"
           processStartElement
         when XMLStreamConstants::END_ELEMENT
+          puts "processing end"
           processEndElement
         when XMLStreamConstants::CHARACTERS
+          puts "processing chars"
           processCharacters
         end
+        p @xmlStreamReader
+        puts "#{event} just happened, dude"
       end
 		rescue XMLStreamException => exception
-			raise LoadException.new(exception)
+			raise Exception.new(exception)
     end
-
+    puts "Saving stuff!!!!s"
     if @controller
       # TODO: initialize should be called here
       # Inject controller fields
@@ -266,6 +276,7 @@ class FxmlLoader
 		unless @root
 			@root = @current.value;
     end
+    puts "Processed Start Element and got #{@root}"
   end
 
 	def createElement()
@@ -386,14 +397,16 @@ class FxmlLoader
   end
 
   def processEndElement()
+    puts "ending!!!!!!!!"
 		@current.processEndElement();
-
+puts @loadListener
 		if @loadListener
 			@loadListener.endElement(@current.value);
 		end
 
 		# Move up the stack
 		@current = @current.parent;
+    puts "current is now #{@current}"
 	end
 
 	def processCharacters()

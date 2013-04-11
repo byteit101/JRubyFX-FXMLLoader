@@ -1,5 +1,60 @@
 require_relative './elts'
 
+class StupidFixTODOInsets < Java::javafx::geometry::InsetsBuilder
+  def initialize()
+    super
+  end
+  add_method_signature :getLeft, [Java::double]
+  def getLeft()
+
+  end
+
+  add_method_signature :setLeft, [Java::java.lang.Void, Java::double]
+  def setLeft(value)
+    left(value)
+  end
+
+  add_method_signature :getRight, [Java::double]
+  def getRight()
+
+  end
+
+  add_method_signature :setRight, [Java::java.lang.Void, Java::double]
+  def setRight(value)
+    right(value)
+  end
+  add_method_signature :getBottom, [Java::double]
+  def getBottom()
+
+  end
+
+  add_method_signature :setBottom, [Java::java.lang.Void, Java::double]
+  def setBottom(value)
+    bottom(value)
+  end
+  add_method_signature :getTop, [Java::double]
+  def getTop()
+
+  end
+
+  add_method_signature :setTop, [Java::java.lang.Void, Java::double]
+  def setTop(value)
+    top(value)
+  end
+
+  def size
+    puts "GAAAAAAAAAAAAAA!!!!!"
+    puts caller
+    990
+  end
+  def to_s
+    "the thingabmabomb"
+  end
+  def inspect
+    "whozamawhatzit"
+  end
+end
+
 class ValueElement < Element
   attr_accessor :fx_id
   @fx_id = nil;
@@ -16,37 +71,44 @@ class ValueElement < Element
   end
 
   def processEndElement()
+    puts callz + "process end super?"
     super
+    puts callz + "process end superd!"
+    p value
 
     # Build the value, if necessary
     if (value.is_a? Builder)
+      puts "build it"
       updateValue(value.build());
-
+puts "process it"
       processValue();
     else
       processInstancePropertyAttributes();
     end
-
+puts "donet"
     processEventHandlerAttributes();
-
+puts "ahndersAtrrs"
     # Process static property attributes
     if (staticPropertyAttributes.length > 0)
       for attribute in staticPropertyAttributes
+        puts "process prop attr-----------"
+        p attribute
         processPropertyAttribute(attribute);
       end
     end
-
+puts "staticpro"
     # Process static property elements
     if (staticPropertyElements.length > 0)
       for  element in staticPropertyElements
         RubyWrapperBeanAdapter.put(value, element.sourceType, element.name, element.value);
       end
     end
-
+puts "parentS>AS"
     if (parent != nil)
       if (parent.isCollection())
         parent.add(value);
       else
+        puts callz + " ANd setting  #{value} on #{parent}"
         parent.set value
       end
     end
@@ -107,14 +169,16 @@ class ValueElement < Element
         # set fx:id property value to Node.id only if Node.id was not
         # already set when processing start element attributes
         if (properties[idProperty.value] == nil)
+          puts callz + "saving ID property"
           properties[idProperty.value()]= @fx_id;
         end
       end
-
+      puts callz+ "About to set instance variable #{@fx_id}"
       # Set the controller field value
       if (parentLoader.controller != nil)
         field = parentLoader.controller.instance_variable_set("@" + @fx_id, value)
       end
+      puts callz + "Set.."
     end
   end
 
@@ -157,7 +221,7 @@ class ValueElement < Element
 #            raise LoadException.new("Invalid identifier.");
 #          end
 #        end
-
+puts callz + "Found FXID is #{value}"
         @fx_id = value;
 
       elsif (localName == (FXL::FX_CONTROLLER_ATTRIBUTE))
@@ -165,6 +229,7 @@ class ValueElement < Element
           raise LoadException.new(FXL::FX_NAMESPACE_PREFIX + ":" + FXL::FX_CONTROLLER_ATTRIBUTE		+ " can only be applied to root element.");
         end
 
+puts callz + "Found controller attrib is #{value} (#{controller}, #{staticLoad})"
         if (controller != nil)
           raise LoadException.new("Controller value already specified.");
         end
@@ -194,6 +259,7 @@ class ValueElement < Element
         raise LoadException.new("Invalid attribute.");
       end
     else
+      puts callz + "Super Again!"
       super(prefix, localName, value);
     end
   end

@@ -3,13 +3,14 @@ class InstanceDeclarationElement < ValueElement
 
   def initialize(current, xmlStreamReader, loadListener, parentLoader, type)
     super(current, xmlStreamReader, loadListener, parentLoader)
+    puts "new instances! #{type}"
     @type = type;
     @constant = nil;
     @factory = nil;
   end
 
   def processAttribute( prefix,  localName,  value)
-
+    puts callz + "Processing #{prefix} for #{localName} on #{type} value: #{value}"
     if (prefix != nil				&& prefix == (FXL::FX_NAMESPACE_PREFIX))
       if (localName == (FXL::FX_VALUE_ATTRIBUTE))
         @value = value;
@@ -18,15 +19,18 @@ class InstanceDeclarationElement < ValueElement
       elsif (localName == (FXL::FX_FACTORY_ATTRIBUTE))
         factory = value;
       else
+        puts callz + "SUPER!"
         super(prefix, localName, value);
       end
     else
+        puts callz + "SUPER2!"
       super(prefix, localName, value);
     end
   end
 
   def constructValue()
     value = nil
+    puts callz  + "building new object when #{@value.inspect}, #{constant.inspect}, #{factory.inspect}"
     if (@value != nil)
       value = RubyWrapperBeanAdapter.coerce(@value, type);
     elsif (constant != nil)
@@ -48,7 +52,29 @@ class InstanceDeclarationElement < ValueElement
       end
     else
       value = (parentLoader.builderFactory == nil) ? nil : parentLoader.builderFactory.getBuilder(type);
-
+      puts callz + "now using #{value.class}"
+      if (value.class.to_s == "Java::JavafxFxml::ObjectBuilder")
+       puts "########################## WARNING #############################3"
+        class << value
+          def size
+            puts caller
+            puts "size waz called!"
+            6
+          end
+          def [](x)
+            get(x)
+          end
+          def []=(x,y)
+            put(x,y)
+          end
+          def to_s
+            "something interesting...."
+          end
+          def inspect
+            "something equally interesting...."
+          end
+        end
+      end
       if (value == nil)
         begin
           puts callz + "attemping it"
@@ -62,6 +88,10 @@ class InstanceDeclarationElement < ValueElement
         rescue IllegalAccessException => exception
           raise LoadException.new(exception);
         end
+      else
+
+        puts value.size
+        puts callz + "parent loader is #{parentLoader.builderFactory} and got #{value} for #{type} (#{value.inspect} #{type.inspect}, #{parentLoader.builderFactory.inspect})"
       end
     end
 
@@ -71,6 +101,10 @@ end
 
 # Element representing an unknown type
 class UnknownTypeElement < ValueElement
+
+  def initialize()
+    puts "oh no...."
+  end
   # TODO: cleanup
   # Map type representing an unknown value
   #		def UnknownValueMap extends AbstractMap<String, Object>
@@ -414,7 +448,7 @@ class PropertyElement < Element
   end
 
   def isCollection()
-    return (readOnly) ? super() : false;
+    return (@readOnly) ? super() : false;
   end
 
   def add( element)
@@ -443,7 +477,7 @@ class PropertyElement < Element
         parent.staticPropertyElements.add(self);
       else
         # Apply the static property value
-        RubyWrapperBeanAdapter.put(parent.value, sourceType, name, value);
+        RubyWrapperBeanAdapter.put3(parent.value, sourceType, name, value);
       end
     end
   end

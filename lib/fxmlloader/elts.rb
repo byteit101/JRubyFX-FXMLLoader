@@ -35,18 +35,18 @@ class Element
     # Return true if value is a list, or if the value's type defines
     # a default property that is a list
     collection = false
-    if (@value.kind_of?(Enumerable))
+    if (@value.kind_of?(Enumerable) || @value.java_kind_of?(Java.java.util.List))
       collection = true;
     else
-      defaultProperty = @value.default_property
+      defaultProperty = @value.java_class.annotation(DefaultProperty.java_class);
 
       if (defaultProperty != nil)
-        collection = getProperties()[defaultProperty.value].kind_of?(Enumerable)
+        collection = getProperties()[defaultProperty.value].java_kind_of?(Java.java.util.List)
       else
         collection = false;
       end
     end
-
+    puts callz + "Is it a collection? #{collection.inspect} <= #{@value.java_class}"
     return collection;
   end
 
@@ -54,12 +54,12 @@ class Element
     # If value is a list, add element to it; otherwise, get the value
     # of the default property, which is assumed to be a list and add
     # to that (coerce to the appropriate type)
-    if (@value.kind_of?(Enumerable))
-      value
+    if (@value.kind_of?(Enumerable) || @value.java_kind_of?(java.util.List))
+      value.to_java
     else
       type = value.java_class
-      defaultProperty = type.getAnnotation(DefaultProperty.java_class);
-      defaultPropertyName = defaultProperty.value();
+      defaultProperty = type.annotation(DefaultProperty.java_class);
+      defaultPropertyName = defaultProperty.to_java.value();
 
       # Get the list value
       list =  getProperties[defaultPropertyName]
@@ -89,20 +89,32 @@ class Element
   end
 
   def updateValue(value)
+    puts callz + "Updating value from #{@value} to #{value.class}"
     @value = value;
     @valueAdapter = nil;
   end
 
   def isTyped()
-    return !(@value.is_a? Hash);
+    puts callz + "checking if typed"
+    p @value.class
+    p @value
+    q =  !(@value.java_kind_of? Java::java.util.Map or @value.is_a? Hash  );
+    puts callz + "type result: #{q.inspect}"
+    q
   end
 
   def getValueAdapter()
     if (@valueAdapter == nil)
-      puts callz + "trying to get it"
+      puts callz + "trying to get itqq"
       print callz
-      puts @value
+      print @value
+      puts @value.class
+      puts caller
+      if @value.class.to_s == "Java::JavafxFxml::ObjectBuilder"
+        puts caller
+      end
       @valueAdapter = RubyWrapperBeanAdapter.new(@value);
+      puts callz + "got"
     end
     return @valueAdapter;
   end
@@ -149,7 +161,7 @@ class Element
         if (@loadListener != nil)
           @loadListener.readEventHandlerAttribute(localName, value);
         end
-
+        puts callz + "found eventHandler prefix #{prefix}, #{localName}, #{value}"
         eventHandlerAttributes <<(Attribute.new(localName, nil, value));
       else
         i = localName.rindex('.');
@@ -160,12 +172,15 @@ class Element
             @loadListener.readPropertyAttribute(localName, nil, value);
           end
 
+        puts callz + "found property attrib #{prefix}, #{localName}, #{value}"
           instancePropertyAttributes << (Attribute.new(localName, nil, value));
         else
           # The attribute represents a static property
           name = localName[(i + 1)..-1];
           sourceType = parentLoader.getType(localName[0, i]);
 
+        puts callz + "found static property #{prefix}, #{localName}, #{value}"
+        puts callz + "and its #{sourceType}, #{@staticLoad}"
           if (sourceType != nil)
             if (@loadListener != nil)
               @loadListener.readPropertyAttribute(name, sourceType, value);
@@ -191,8 +206,9 @@ class Element
   def processPropertyAttribute(attribute)
     value = attribute.value;
     if (isBindingExpression(value))
+      puts callz  + "is a binding !"
       # Resolve the expression
-      Expression expression;
+      expression= nil
 
       if (attribute.sourceType != nil)
         raise LoadException.new("Cannot bind to static property.");
@@ -223,6 +239,7 @@ class Element
     elsif (isBidirectionalBindingExpression(value))
       raise UnsupportedOperationException.new("This feature is not currently enabled.");
     else
+      puts callz + "processing 3 for #{attribute.sourceType}, #{attribute.name}, #{value}"
       processValue3(attribute.sourceType, attribute.name, value);
     end
   end
@@ -241,23 +258,31 @@ class Element
     processed = false;
     #process list or array first
     if (sourceType == nil && isTyped())
-      valueAdapter = getValueAdapter();
-      type = valueAdapter.getType(propertyName);
+      puts callz + "getting value adptr"
+      lvalueAdapter = getValueAdapter();
+      type = lvalueAdapter.getType(propertyName);
 
       if (type == nil)
+        puts "Processing values3 fails on: "
+        p sourceType, propertyName, aValue
+        p lvalueAdapter
+        p caller
         raise PropertyNotFoundException.new("Property \"" + propertyName          + "\" does not exist" + " or is read-only.");
       end
-
-      if (List.java_class.assignable_from?(type.java_class) && valueAdapter.read_only?(propertyName))
-        populateListFromString(valueAdapter, propertyName, aValue);
+      puts "checking assignable"
+      if (List.java_class.assignable_from?(type.java_class) && lvalueAdapter.read_only?(propertyName))
+        populateListFromString(lvalueAdapter, propertyName, aValue);
         processed = true;
       elsif (type.is_a? Enumerable)
         applyProperty(propertyName, sourceType, populateArrayFromString(type, aValue));
         processed = true;
       end
     end
+    puts callz + "276"
     if (!processed)
+      puts callz + "Must appky it"
       applyProperty(propertyName, sourceType, resolvePrefixedValue(aValue));
+      puts callz + "280"
       processed = true;
     end
     return processed;
@@ -396,26 +421,30 @@ class Element
     if (sourceType == nil)
       getProperties[name] = value
     else
-      RubyWrapperBeanAdapter.put(@value, sourceType, name, value);
+      RubyWrapperBeanAdapter.put3(@value, sourceType, name, value);
     end
   end
 
   def processEventHandlerAttributes()
+    puts "events!"
+    p @eventHandlerAttributes
     if (@eventHandlerAttributes.length > 0 && !parentLoader.staticLoad)
       for attribute in @eventHandlerAttributes
         eventHandler = nil;
-
+puts "doing it now for"
+p attribute
         attrValue = attribute.value;
 
         if (attrValue.start_with?(FXL::CONTROLLER_METHOD_PREFIX))
           attrValue = attrValue[FXL::CONTROLLER_METHOD_PREFIX.length..-1]
-
+puts 429
           if (!attrValue.start_with?(FXL::CONTROLLER_METHOD_PREFIX))
             if (attrValue.length() == 0)
               raise LoadException.new("Missing controller method.");
             end
-
+puts 434
             if (parentLoader.controller == nil)
+              puts "eek"
               raise LoadException.new("No controller specified. ");
             end
 
@@ -424,12 +453,16 @@ class Element
             #            if (method == nil)
             #              raise LoadException.new("Controller method \"" + attrValue + "\" not found.");
             #            end
+            puts "wrm"
+            p parentLoader
+            p attrValue
+            p parentLoader.controller
             eventHandler = EventHandlerWrapper.new(parentLoader.controller, attrValue)
           end
 
         elsif (attrValue.start_with?(FXL::EXPRESSION_PREFIX))
           attrValue = attrValue[FXL::EXPRESSION_PREFIX.length..-1]
-
+puts 449
           if (attrValue.length() == 0)
             raise LoadException.new("Missing expression reference.");
           end
@@ -440,7 +473,7 @@ class Element
           end
 
         end
-
+puts 460
         if (eventHandler == nil)
           if (attrValue.length() == 0 || @scriptEngine == nil)
             raise LoadException.new("Error resolving " + attribute.name + "='" + attribute.value +
@@ -449,21 +482,23 @@ class Element
 
           eventHandler = ScriptEventHandler.new(attrValue, @scriptEngine);
         end
-
+puts "469"
         # Add the handler
         if (eventHandler != nil)
+
           addEventHandler(attribute, eventHandler);
         end
       end
     end
+    puts "event done"
   end
 
   def addEventHandler(attribute, eventHandler)
-
+puts "aaeehh"
     if (attribute.name.end_with?(FXL::CHANGE_EVENT_HANDLER_SUFFIX))
       i = FXL::EVENT_HANDLER_PREFIX.length();
       j = attribute.name.length() - FXL::CHANGE_EVENT_HANDLER_SUFFIX.length();
-
+puts "i j"
       if (i == j)
         if (@value.is_a? ObservableList)
           list =  @value;
@@ -476,7 +511,7 @@ class Element
         end
       else
         key = attribute.name[i].downcase + attribute.name[i + 1, j]
-
+p 503
         propertyModel = getValueAdapter().getPropertyModel(key);
         if (propertyModel == nil)
           raise LoadException.new(@value.getClass().getName() + " does not define" + " a property model for \"" + key + "\".");
@@ -485,7 +520,8 @@ class Element
         propertyModel.addListener(PropertyChangeAdapter.new(@value,  eventHandler));
       end
     else
-      getValueAdapter().put(attribute.name, eventHandler);
+      p 512
+      getValueAdapter[attribute.name] =  eventHandler
     end
   end
 end
@@ -507,7 +543,11 @@ class EventHandlerWrapper
   end
   def handle(eventArgs)
     begin
-      @ctrl.send(@funcName, eventArgs)
+      if @ctrl.method(@funcName).arity > 0
+        @ctrl.send(@funcName, eventArgs)
+      else
+        @ctrl.send(@funcName)
+      end
     rescue NameError
       puts "Warning: method #{@funcName} was not found on controller #{@ctrl}"
     end
