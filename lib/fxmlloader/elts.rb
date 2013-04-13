@@ -526,17 +526,14 @@ class EventHandlerWrapper
     @funcName = funcName
   end
   def handle(eventArgs)
-    begin
+    if @ctrl.respond_to? @funcName
       if @ctrl.method(@funcName).arity > 0
         @ctrl.send(@funcName, eventArgs)
       else
         @ctrl.send(@funcName)
       end
-    rescue NameError => e
-      p e
+    else
       puts "Warning: method #{@funcName} was not found on controller #{@ctrl}"
-      p @funcName
-      p @ctrl
     end
   end
 end
