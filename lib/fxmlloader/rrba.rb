@@ -217,7 +217,7 @@ class RubyWrapperBeanAdapter
   #     */
   #    @Override
   def []=(key, value)
-    puts "calling setter"
+    dputs "calling setter"
     if (key == nil)
       raise "NULL PTR"
     end
@@ -225,9 +225,9 @@ class RubyWrapperBeanAdapter
     setterMethod = getSetterMethod(key);
 
     if (setterMethod == nil)
-      puts caller
-      puts "error in []=!"
-      p key, value, @bean
+      dputs caller
+      dputs "error in []=!"
+      dp key, value, @bean
       raise PropertyNotFoundException.new("Property \"" + key + "\" does not exist"                + " or is read-only.");
     end
     begin
@@ -235,15 +235,15 @@ class RubyWrapperBeanAdapter
       co = coerce(value, ty)
       setterMethod.invoke(@bean, co );
     rescue IllegalAccessException => exception
-      p "issues1"
-      p exception
+      dp "issues1"
+      dp exception
       raise "RuntimeException.new(exception);"
     rescue InvocationTargetException => exception
-      p "issues2"
-      p exception
+      dp "issues2"
+      dp exception
       raise R"untimeException.new(exception);"
     end
-    puts "eone"
+    dputs "eone"
     return nil;
   end
 
@@ -282,8 +282,8 @@ class RubyWrapperBeanAdapter
     if (key == nil)
       raise "NULL PTR"
     end
-    puts "checking for readonly-ness of #{key}:"
-    p getSetterMethod(key)
+    dputs "checking for readonly-ness of #{key}:"
+    dp getSetterMethod(key)
     return getSetterMethod(key) == nil;
   end
 
@@ -333,9 +333,9 @@ class RubyWrapperBeanAdapter
     end
 
     getterMethod = getGetterMethod(key);
-    puts "GOt getter method for #{key}"
-    p getterMethod
-    puts getterMethod
+    dputs "GOt getter method for #{key}"
+    dp getterMethod
+    dputs getterMethod
 
     return (getterMethod == nil) ? nil : getterMethod.return_type
   end
@@ -354,16 +354,16 @@ class RubyWrapperBeanAdapter
   #     */
   #    @SuppressWarnings("unchecked")
   def self.coerce( value,  type)
-    puts "coercing..."
+    dputs "coercing..."
     if (type == nil)
-      puts "WHAT!"
+      dputs "WHAT!"
       raise "ArgumentError.new();"
     end
     if (value.class == Java::JavaObject)
-      puts "de-objectifying it!!!!"
-      p value.class
-      p value.java_class
-      p value.to_java
+      dputs "de-objectifying it!!!!"
+      dp value.class
+      dp value.java_class
+      dp value.to_java
       value = value.to_java
     end
 
@@ -396,7 +396,7 @@ class RubyWrapperBeanAdapter
       if mapper[[value.class, type]]
         coercedValue = mapper[[value.class, type]].call(value)
       else
-        puts "!! Non-normal RUBY coerce (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}])"
+        dputs "!! Non-normal RUBY coerce (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}])"
         raise "oh no!"
       end
       # Ruby String :D
@@ -407,10 +407,10 @@ class RubyWrapperBeanAdapter
       coercedValue = type.ruby_class.valueOf(value)
     elsif value.respond_to?(:java_class) && value.java_class == Java::java.net.URL.java_class && type == Java::java.lang.String.java_class
       # TODO: HACK!
-      puts "COnverting url to string"
+      dputs "COnverting url to string"
       coercedValue = value.to_s
     else
-      puts "!! Non-normal coerce (#{value}, #{type}) (#{value.inspect}, #{type.inspect})"
+      dputs "!! Non-normal coerce (#{value}, #{type}) (#{value.inspect}, #{type.inspect})"
       if (type == java.lang.Boolean.java_class || type == Boolean.TYPE)
         coercedValue = Boolean.valueOf(value.toString());
       elsif (type == Character.java_class            || type == Character.TYPE)
@@ -481,13 +481,13 @@ class RubyWrapperBeanAdapter
           raise Exception.new(exception);
         end
       else
-        puts "elsee"
+        dputs "elsee"
         valueType = value.java_class();
         valueOfMethod = nil;
 
         while (valueOfMethod == nil                && valueType != nil)
           begin
-            puts "checking access"
+            dputs "checking access"
             ReflectUtil.checkPackageAccess(type);
             valueOfMethod = type.declared_method(VALUE_OF_METHOD_NAME, valueType);
           rescue NoSuchMethodException => exception
@@ -510,22 +510,22 @@ class RubyWrapperBeanAdapter
         begin
           coercedValue = MethodUtil.invoke(valueOfMethod, nil, [ value ]);
         rescue IllegalAccessException => exception
-          puts "EAI1"
-          p exception
+          dputs "EAI1"
+          dp exception
           raise "RuntimeException.new(exception);"
         rescue InvocationTargetException => exception
-          puts "ETI1"
-          p exception
+          dputs "ETI1"
+          dp exception
           raise "RuntimeException.new(exception);"
         rescue SecurityException => exception
-          puts "SE1"
-          p exception
+          dputs "SE1"
+          dp exception
           raise "RuntimeException.new(exception);"
         end
       end
     end
-    puts "Coerced #{value.class} into a #{coercedValue.class} for #{type}"
-    p value, coercedValue
+    dputs "Coerced #{value.class} into a #{coercedValue.class} for #{type}"
+    dp value, coercedValue
     return coercedValue;
   end
 
@@ -594,7 +594,7 @@ class RubyWrapperBeanAdapter
     elsif target.is_a? String
       targetType = java.lang.String.java_class
     else
-      p target, sourceType, key, value
+      dp target, sourceType, key, value
       raise "Shoots!"
     end
 
@@ -607,7 +607,7 @@ class RubyWrapperBeanAdapter
     elsif value.is_a? String
       valueClass = java.lang.String.java_class
     else
-      p target, sourceType, key, value
+      dp target, sourceType, key, value
       raise "Shoots TWICE!"
     end
       setterMethod = getStaticSetterMethod(sourceType, key, valueClass, targetType);
@@ -701,8 +701,8 @@ class RubyWrapperBeanAdapter
     if (itemType.is_a? ParameterizedType)
       itemType = (itemType).getRawType();
     end
-    puts "Listem item type is for "
-    p listType, itemType
+    dputs "Listem item type is for "
+    dp listType, itemType
     return itemType;
   end
 
@@ -730,41 +730,41 @@ class RubyWrapperBeanAdapter
     itemType = nil;
 
     parentType = listType;
-    puts "searching for generic #{listType}"
+    dputs "searching for generic #{listType}"
     while (parentType != nil)
-      puts "Still not nill"
-      p parentType
+      dputs "Still not nill"
+      dp parentType
       if (parentType.is_a? ParameterizedType)
-        puts "Parametratized type!"
+        dputs "Parametratized type!"
         parameterizedType = parentType;
         rawType = parameterizedType.getRawType();
-        p rawType, parameterizedType
+        dp rawType, parameterizedType
         if (List.java_class.assignable_from?(rawType))
           itemType = parameterizedType.getActualTypeArguments()[0];
-          puts "OOOOOHHH item type is #{itemType}"
-          p itemType
+          dputs "OOOOOHHH item type is #{itemType}"
+          dp itemType
         end
 
         break;
       end
 
       classType = parentType;
-      puts "checinhg generic interfaces"
+      dputs "checinhg generic interfaces"
       genericInterfaces = classType.generic_interfaces();
 
       genericInterfaces.each do |genericInterface|
-puts "serarcing ingeraface"
-p genericInterface
+dputs "serarcing ingeraface"
+dp genericInterface
         if (genericInterface.is_a? ParameterizedType)
           parameterizedType = genericInterface;
           interfaceType = parameterizedType.getRawType();
-puts "checking"
-            p parameterizedType, interfaceType
+dputs "checking"
+            dp parameterizedType, interfaceType
           if (List.java_class.assignable_from?(interfaceType.java_class)) || (List.java_class.assignable_from?(interfaceType.java_object))
             itemType = parameterizedType.getActualTypeArguments()[0];
-            puts "found it at "
-            p parameterizedType, interfaceType, itemType
-            p itemType.bounds
+            dputs "found it at "
+            dp parameterizedType, interfaceType, itemType
+            dp itemType.bounds
             break;
           end
         end
@@ -778,8 +778,8 @@ puts "checking"
     end
 
     if (itemType != nil && itemType.is_a?(java.lang.reflect.TypeVariable))
-      puts 'aww shucks'
-      p itemType
+      dputs 'aww shucks'
+      dp itemType
       itemType = Java::java.lang.Object.java_class;
     end
 
@@ -951,8 +951,8 @@ puts "checking"
     end
 
     if (valueType == nil)
-      puts caller
-      p sourceType, key, valueType, targetType, rubify
+      dputs caller
+      dp sourceType, key, valueType, targetType, rubify
       raise "NULL PTR"
     end
 

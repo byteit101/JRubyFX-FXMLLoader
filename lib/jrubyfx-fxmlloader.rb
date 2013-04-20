@@ -111,6 +111,16 @@ class LoadException < Exception
     super
   end
 end
+$DEBUG_IT_FXML = false
+def dp(*args)
+  p *args if $DEBUG_IT_FXML
+end
+def dputs(*args)
+  puts *args if $DEBUG_IT_FXML
+end
+def dprint(*args)
+  print *args if $DEBUG_IT_FXML
+end
 
 FXL = java_import('javafx.fxml.FXMLLoader')[0]
 class FxmlLoader
@@ -123,12 +133,12 @@ class FxmlLoader
     @builderFactory = buildFactory || JavaFXBuilderFactory.new
     @template = false
     if resourcs
-      puts "WHOA WHOAT!!!! resources"
-      p resourcs
+      dputs "WHOA WHOAT!!!! resources"
+      dp resourcs
     end
     if loaders
-      puts "WHOA WHOAT!!!! loaders"
-      p loaders
+      dputs "WHOA WHOAT!!!! loaders"
+      dp loaders
     end
     @namespace = {}
     @packages = []
@@ -175,31 +185,31 @@ class FxmlLoader
     # Parse the XML stream
 		begin
 			while @xmlStreamReader.hasNext()
-        puts "......"
+        dputs "......"
         event = @xmlStreamReader.next();
-        puts "#{event} aout happened, dude"
+        dputs "#{event} aout happened, dude"
 				case event
         when XMLStreamConstants::PROCESSING_INSTRUCTION
-          puts "processing instr"
+          dputs "processing instr"
           processProcessingInstruction
         when XMLStreamConstants::COMMENT
-          puts "processing comment"
+          dputs "processing comment"
           processComment
         when XMLStreamConstants::START_ELEMENT
-          puts "processing start"
+          dputs "processing start"
           processStartElement
         when XMLStreamConstants::END_ELEMENT
-          puts "processing end"
+          dputs "processing end"
           processEndElement
         when XMLStreamConstants::CHARACTERS
-          puts "processing chars"
+          dputs "processing chars"
           processCharacters
         end
       end
 		rescue XMLStreamException => exception
 			raise Exception.new(exception)
     end
-    puts "Saving stuff!!!!s"
+    dputs "Saving stuff!!!!s"
     if @controller
       # TODO: initialize should be called here
       # Inject controller fields
@@ -326,11 +336,11 @@ class FxmlLoader
           pppn = pppn.parent
         end
         prefixz = (" " * numz) + prefixz
-        puts "#{prefixz}Creating new stuff"
-        print prefixz
-        p localName
-        print prefixz
-        p type
+        dputs "#{prefixz}Creating new stuff"
+        dprint prefixz
+        dp localName
+        dprint prefixz
+        dp type
 
 				if type
 					if @loadListener
@@ -393,7 +403,7 @@ class FxmlLoader
   end
 
   def processEndElement()
-    puts "ending!!!!!!!!"
+    dputs "ending!!!!!!!!"
 		@current.processEndElement();
 		if @loadListener
 			@loadListener.endElement(@current.value);
@@ -597,14 +607,14 @@ end
 
 class FXTesterC
   def initialize(*args)
-    puts "I got the args"
-    p args
+    dputs "I got the args"
+    dp args
   end
 
   def do_it(e)
-    puts "done it"
-    p self.instance_variables
-    p e
+    dputs "done it"
+    dp self.instance_variables
+    dp e
   end
 end
 

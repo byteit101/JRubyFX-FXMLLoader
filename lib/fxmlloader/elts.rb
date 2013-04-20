@@ -46,7 +46,7 @@ class Element
         collection = false;
       end
     end
-    puts callz + "Is it a collection? #{collection.inspect} <= #{@value.java_class}"
+    dputs callz + "Is it a collection? #{collection.inspect} <= #{@value.java_class}"
     return collection;
   end
 
@@ -89,32 +89,32 @@ class Element
   end
 
   def updateValue(value)
-    puts callz + "Updating value from #{@value} to #{value.class}"
+    dputs callz + "Updating value from #{@value} to #{value.class}"
     @value = value;
     @valueAdapter = nil;
   end
 
   def isTyped()
-    puts callz + "checking if typed"
-    p @value.class
-    p @value
+    dputs callz + "checking if typed"
+    dp @value.class
+    dp @value
     q =  !(@value.java_kind_of? Java::java.util.Map or @value.is_a? Hash  );
-    puts callz + "type result: #{q.inspect}"
+    dputs callz + "type result: #{q.inspect}"
     q
   end
 
   def getValueAdapter()
     if (@valueAdapter == nil)
-      puts callz + "trying to get itqq"
-      print callz
-      print @value
-      puts @value.class
-      puts caller
+      dputs callz + "trying to get itqq"
+      dprint callz
+      dprint @value
+      dputs @value.class
+      dputs caller
       if @value.class.to_s == "Java::JavafxFxml::ObjectBuilder"
-        puts caller
+        dputs caller
       end
       @valueAdapter = RubyWrapperBeanAdapter.new(@value);
-      puts callz + "got"
+      dputs callz + "got"
     end
     return @valueAdapter;
   end
@@ -161,7 +161,7 @@ class Element
         if (@loadListener != nil)
           @loadListener.readEventHandlerAttribute(localName, value);
         end
-        puts callz + "found eventHandler prefix #{prefix}, #{localName}, #{value}"
+        dputs callz + "found eventHandler prefix #{prefix}, #{localName}, #{value}"
         eventHandlerAttributes <<(Attribute.new(localName, nil, value));
       else
         i = localName.rindex('.');
@@ -172,15 +172,15 @@ class Element
             @loadListener.readPropertyAttribute(localName, nil, value);
           end
 
-        puts callz + "found property attrib #{prefix}, #{localName}, #{value}"
+        dputs callz + "found property attrib #{prefix}, #{localName}, #{value}"
           instancePropertyAttributes << (Attribute.new(localName, nil, value));
         else
           # The attribute represents a static property
           name = localName[(i + 1)..-1];
           sourceType = parentLoader.getType(localName[0, i]);
 
-        puts callz + "found static property #{prefix}, #{localName}, #{value}"
-        puts callz + "and its #{sourceType}, #{@staticLoad}"
+        dputs callz + "found static property #{prefix}, #{localName}, #{value}"
+        dputs callz + "and its #{sourceType}, #{@staticLoad}"
           if (sourceType != nil)
             if (@loadListener != nil)
               @loadListener.readPropertyAttribute(name, sourceType, value);
@@ -206,7 +206,7 @@ class Element
   def processPropertyAttribute(attribute)
     value = attribute.value;
     if (isBindingExpression(value))
-      puts callz  + "is a binding !"
+      dputs callz  + "is a binding !"
       # Resolve the expression
       expression= nil
 
@@ -239,7 +239,7 @@ class Element
     elsif (isBidirectionalBindingExpression(value))
       raise UnsupportedOperationException.new("This feature is not currently enabled.");
     else
-      puts callz + "processing 3 for #{attribute.sourceType}, #{attribute.name}, #{value}"
+      dputs callz + "processing 3 for #{attribute.sourceType}, #{attribute.name}, #{value}"
       processValue3(attribute.sourceType, attribute.name, value);
     end
   end
@@ -258,18 +258,18 @@ class Element
     processed = false;
     #process list or array first
     if (sourceType == nil && isTyped())
-      puts callz + "getting value adptr"
+      dputs callz + "getting value adptr"
       lvalueAdapter = getValueAdapter();
       type = lvalueAdapter.getType(propertyName);
 
       if (type == nil)
-        puts "Processing values3 fails on: "
-        p sourceType, propertyName, aValue
-        p lvalueAdapter
-        p caller
+        dputs "Processing values3 fails on: "
+        dp sourceType, propertyName, aValue
+        dp lvalueAdapter
+        dp caller
         raise PropertyNotFoundException.new("Property \"" + propertyName          + "\" does not exist" + " or is read-only.");
       end
-      puts "checking assignable"
+      dputs "checking assignable"
       if (List.java_class.assignable_from?(type.java_class) && lvalueAdapter.read_only?(propertyName))
         populateListFromString(lvalueAdapter, propertyName, aValue);
         processed = true;
@@ -278,11 +278,11 @@ class Element
         processed = true;
       end
     end
-    puts callz + "276"
+    dputs callz + "276"
     if (!processed)
-      puts callz + "Must appky it"
+      dputs callz + "Must appky it"
       applyProperty(propertyName, sourceType, resolvePrefixedValue(aValue));
-      puts callz + "280"
+      dputs callz + "280"
       processed = true;
     end
     return processed;
@@ -317,8 +317,8 @@ class Element
         begin
           return (aValue[0] == '/') ? classLoader.getResource(aValue[1..-1]).to_s : URL.new(parentLoader.location, aValue).to_s
         rescue MalformedURLException => e
-          p e
-          puts "#{parentLoader.location} + /+ #{aValue}"
+          dp e
+          dputs "#{parentLoader.location} + /+ #{aValue}"
           raise "whoops"
         end
       end
@@ -365,7 +365,7 @@ class Element
  * token is prefixed with RELATIVE_PATH_PREFIX a value added to the
  * array becomes relative to document location.
 =end
-  #TODO: fix this up to use java arrays
+  #TODO: fix this udp to use java arrays
   def populateArrayFromString( type, stringValue)
 
     propertyValue = nil;
@@ -440,7 +440,7 @@ class Element
               raise LoadException.new("Missing controller method.");
             end
             if (parentLoader.controller == nil)
-              puts "eek"
+              dputs "eek"
               raise LoadException.new("No controller specified. ");
             end
 
@@ -533,7 +533,7 @@ class EventHandlerWrapper
         @ctrl.send(@funcName, eventArgs)
       end
     else
-      puts "Warning: method #{@funcName} was not found on controller #{@ctrl}"
+      dputs "Warning: method #{@funcName} was not found on controller #{@ctrl}"
     end
   end
 end

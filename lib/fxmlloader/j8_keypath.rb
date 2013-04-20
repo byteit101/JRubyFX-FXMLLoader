@@ -58,39 +58,39 @@ class KeyPath < AbstractList
         if (elements == nil)
             throw NullPointerException.new();
         end
-        puts "built with "
-        p elements
+        dputs "built with "
+        dp elements
         @elements = elements;
     end
 
     def get(index)
-      puts "caled get(#{index}"
+      dputs "caled get(#{index}"
         return @elements[index]
     end
 
     def length
-      puts "length was called"
+      dputs "length was called"
         return @elements.length
     end
     def size
-      puts "size was called"
+      dputs "size was called"
         return @elements.length
     end
 
     def hasNext
-      puts "hasHExt was called"
+      dputs "hasHExt was called"
       # TODO: fix
       return @elements.hasNext
     end
 
     def iterator
-      puts "iterator was calle"
+      dputs "iterator was calle"
       return @elements.iterator
       return KPIterator.new(@elements)
     end
 
     def to_s
-      puts "to_s was called"
+      dputs "to_s was called"
         stringBuilder = StringBuilder.new();
 
         @elements.length.times do |i|

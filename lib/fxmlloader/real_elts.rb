@@ -3,14 +3,14 @@ class InstanceDeclarationElement < ValueElement
 
   def initialize(current, xmlStreamReader, loadListener, parentLoader, type)
     super(current, xmlStreamReader, loadListener, parentLoader)
-    puts "new instances! #{type}"
+    dputs "new instances! #{type}"
     @type = type;
     @constant = nil;
     @factory = nil;
   end
 
   def processAttribute( prefix,  localName,  value)
-    puts callz + "Processing #{prefix} for #{localName} on #{type} value: #{value}"
+    dputs callz + "Processing #{prefix} for #{localName} on #{type} value: #{value}"
     if (prefix != nil				&& prefix == (FXL::FX_NAMESPACE_PREFIX))
       if (localName == (FXL::FX_VALUE_ATTRIBUTE))
         @value = value;
@@ -19,18 +19,18 @@ class InstanceDeclarationElement < ValueElement
       elsif (localName == (FXL::FX_FACTORY_ATTRIBUTE))
         factory = value;
       else
-        puts callz + "SUPER!"
+        dputs callz + "SUPER!"
         super(prefix, localName, value);
       end
     else
-        puts callz + "SUPER2!"
+        dputs callz + "SUPER2!"
       super(prefix, localName, value);
     end
   end
 
   def constructValue()
     value = nil
-    puts callz  + "building new object when #{@value.inspect}, #{constant.inspect}, #{factory.inspect}"
+    dputs callz  + "building new object when #{@value.inspect}, #{constant.inspect}, #{factory.inspect}"
     if (@value != nil)
       value = RubyWrapperBeanAdapter.coerce(@value, type);
     elsif (constant != nil)
@@ -52,16 +52,16 @@ class InstanceDeclarationElement < ValueElement
       end
     else
       value = (parentLoader.builderFactory == nil) ? nil : parentLoader.builderFactory.getBuilder(type);
-      puts callz + "now using #{value.class}"
+      dputs callz + "now using #{value.class}"
       if (value.is_a? Builder or (value.respond_to?(:java_object) && value.java_object.is_a?(Builder)))
         begin
           value.size
         rescue java.lang.UnsupportedOperationException => ex
-       puts "########################## WARNING #############################3"
+       dputs "########################## WARNING #############################3"
         class << value
           def size
-            puts caller
-            puts "size waz called!"
+            dputs caller
+            dputs "size waz called!"
             6
           end
           def [](x)
@@ -84,12 +84,12 @@ class InstanceDeclarationElement < ValueElement
       end
       if (value == nil)
         begin
-          puts callz + "attemping it"
+          dputs callz + "attemping it"
           #TODO: does this work?
           value = ReflectUtil.newInstance(type);
-          puts callz + "got taaatempt"
-          print callz
-          p value
+          dputs callz + "got taaatempt"
+          dprint callz
+          dp value
         rescue InstantiationException => exception
           raise LoadException.new(exception);
         rescue IllegalAccessException => exception
@@ -97,8 +97,8 @@ class InstanceDeclarationElement < ValueElement
         end
       else
 
-        puts value.size
-        puts callz + "parent loader is #{parentLoader.builderFactory} and got #{value} for #{type} (#{value.inspect} #{type.inspect}, #{parentLoader.builderFactory.inspect})"
+        dputs value.size
+        dputs callz + "parent loader is #{parentLoader.builderFactory} and got #{value} for #{type} (#{value.inspect} #{type.inspect}, #{parentLoader.builderFactory.inspect})"
       end
     end
 
@@ -110,7 +110,7 @@ end
 class UnknownTypeElement < ValueElement
 
   def initialize()
-    puts "oh no...."
+    dputs "oh no...."
   end
   # TODO: cleanup
   # Map type representing an unknown value
@@ -256,14 +256,14 @@ class ReferenceElement < ValueElement
   @source = nil;
 
   def processAttribute(prefix, localName, value)
-puts callz + "processing attrib"
-p prefix, localName, value
+dputs callz + "processing attrib"
+dp prefix, localName, value
     if (prefix == nil)
       if (localName == (FXL::REFERENCE_SOURCE_ATTRIBUTE))
         if (loadListener != nil)
           loadListener.readInternalAttribute(localName, value);
         end
-        puts callz + "SAVING SOURCES"
+        dputs callz + "SAVING SOURCES"
         @source = value;
       else
         super(prefix, localName, value);
@@ -408,10 +408,10 @@ class PropertyElement < Element
     @sourceType = nil
     @readOnly = nil
     super(current, xmlStreamReader, loadListener, parentLoader)
-    puts (callz) + "Property Elt"
-    puts callz + name
-    print callz
-    p sourceType
+    dputs (callz) + "Property Elt"
+    dputs callz + name
+    dprint callz
+    dp sourceType
     if (parent == nil)
       raise LoadException.new("Invalid root element.");
     end
@@ -431,10 +431,10 @@ class PropertyElement < Element
 
       parentProperties = parent.getProperties();
       if (parent.isTyped())
-        puts (callz) +"it be typed"
+        dputs (callz) +"it be typed"
         @readOnly = parent.getValueAdapter().read_only?(name);
       else
-        puts (callz) +"it be chedrk"
+        dputs (callz) +"it be chedrk"
         # If the map already defines a value for the property, assume
         # that it is read-only
         @readOnly = parentProperties.has_key?(name);
@@ -445,12 +445,12 @@ class PropertyElement < Element
         if (value == nil)
           raise LoadException.new("Invalid property.");
         end
-        puts (callz) +"saving property #{name} => #{value}"
+        dputs (callz) +"saving property #{name} => #{value}"
         updateValue(value);
       end
-      puts (callz) +"doneish"
+      dputs (callz) +"doneish"
     else
-      puts (callz) +"ITS READ OHLY"
+      dputs (callz) +"ITS READ OHLY"
       # The element represents a static property
       @readOnly = false;
     end
@@ -461,18 +461,18 @@ class PropertyElement < Element
   end
 
   def add( element)
-    puts ( callz) +"Adding #{element} to ===> #{name}"
-    print callz
-    p element
-    p element.class
-    p element.java_class
+    dputs ( callz) +"Adding #{element} to ===> #{name}"
+    dprint callz
+    dp element
+    dp element.class
+    dp element.java_class
     if element.class.inspect == "Java::JavaNet::URL"
       # element = element.java_object
     end
     # Coerce the element to the list item type
     if (parent.isTyped())
       listType = parent.getValueAdapter().getGenericType(name);
-      puts callz + "Typed and list type is #{listType}"
+      dputs callz + "Typed and list type is #{listType}"
       lit = RubyWrapperBeanAdapter.getListItemType(listType)
 # FIXME: HACK!
     if element.class.inspect == "Java::JavaNet::URL"
@@ -487,7 +487,7 @@ class PropertyElement < Element
   end
 
   def set( value)
-    puts (callz) +"setting prope value #{name} ==> #{value}"
+    dputs (callz) +"setting prope value #{name} ==> #{value}"
     # Update the value
     updateValue(value);
 
@@ -506,7 +506,7 @@ class PropertyElement < Element
   end
 
   def processAttribute( prefix,  localName,  value)
-puts (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
+dputs (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
     if (!readOnly)
       raise LoadException.new("Attributes are not supported for writable property elements.");
     end
@@ -516,7 +516,7 @@ puts (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
 
   def processEndElement()
     super();
-puts (callz) +"ENDENDLT "
+dputs (callz) +"ENDENDLT "
     if (readOnly)
       processInstancePropertyAttributes();
       processEventHandlerAttributes();
@@ -526,7 +526,7 @@ puts (callz) +"ENDENDLT "
   def processCharacters()
     if (!readOnly)
       text = xmlStreamReader.getText();
-      puts (callz) +"whitlespa"
+      dputs (callz) +"whitlespa"
       #TODO: normal regexes
       text = extraneousWhitespacePattern.matcher(text).replaceAll(" ");
 
