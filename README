@@ -1,3 +1,5 @@
 == FXMLLoader
 
-You should document your project here.
+Use with JRubyFX.
+
+rake gem to build

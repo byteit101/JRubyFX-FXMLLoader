@@ -1,34 +1,36 @@
-#GPLv2 only classpath (aka java license)
+=begin
+ * Copyright (c) 2010, 2013, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+=end
 
-require 'java'
 
-# Update load path to include the JavaFX runtime and fail nicely if we can't find it
 begin
-  if ENV['JFX_DIR']
-    $LOAD_PATH << ENV['JFX_DIR']
-  else #should we check for 1.7 vs 1.8? oh well, adding extra paths won't hurt anybody (maybe performance loading)
-    jfx_path = ENV_JAVA["sun.boot.library.path"]
-    $LOAD_PATH << if jfx_path.include? ":\\" and !jfx_path.include? "/" # can be tricked, but should work fine
-      #windows
-      jfx_path.gsub(/\\bin[\\]*$/i, "\\lib")
-    else
-      # *nix
-      jfx_path.gsub(/[\/\\][amdix345678_]+$/, "") # strip i386 or amd64 (including variants). TODO: ARM
-    end
-  end
-
-  # Java 8 (after ea-b75) and above has JavaFX as part of the normal distib, only require it if we are 7 or below
-  jre = ENV_JAVA["java.runtime.version"].match %r{^(?<version>(?<major>\d+)\.(?<minor>\d+))\.(?<patch>\d+)(_\d+)?-?(?<release>ea|u\d)?(-?b(?<build>\d+))?}
-  require 'jfxrt.jar' if ENV['JFX_DIR'] or
-    jre[:version].to_f < 1.8 or
-    (jre[:version].to_f == 1.8 and jre[:release] == 'ea' and jre[:build].to_i < 75)
-
   # Attempt to load a javafx class
   Java.javafx.application.Application
 rescue  LoadError, NameError
-  puts "JavaFX runtime not found.  Please install Java 7u6 or newer or set environment variable JFX_DIR to the folder that contains jfxrt.jar "
-  puts "If you have Java 7u6 or later, this is a bug. Please report to the issue tracker on github. Include your OS version, 32/64bit, and architecture (x86, ARM, PPC, etc)"
-  exit -1
+  puts "JRubyFX and JavaFX runtime not found.  Please load this file from JRubyFX"
+  exit -2
 end
 
 #java_import 'javax.xml.stream.util.StreamReaderDelegate'
@@ -605,30 +607,8 @@ class SRDelegateClass < StreamReaderDelegate
   end
 end
 
-class FXTesterC
-  def initialize(*args)
-    dputs "I got the args"
-    dp args
-  end
-
-  def do_it(e)
-    dputs "done it"
-    dp self.instance_variables
-    dp e
-  end
-end
-
 require_relative 'fxmlloader/j8_keypath'
 require_relative 'fxmlloader/elts'
 require_relative 'fxmlloader/value_elts'
 require_relative 'fxmlloader/real_elts'
-require_relative 'fxmlloader/rrba' # its da ruby rappa bean adapta!
-
-#fx = FxmlLoader.new(URL.new("file:///home/patrick/NetBeansProjects/FXMLLoader/lib/test.fxml"), FXTesterC.new)
-#rt = fx.load
-#puts "IT DONE"
-#p rt
-#p fx.root
-#p rt.children[0]
-#p rt.children[0].get_right
-#p rt.children[0].get_right.get_tabs
+require_relative 'fxmlloader/rrba'
