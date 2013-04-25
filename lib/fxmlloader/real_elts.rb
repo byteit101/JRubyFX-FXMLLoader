@@ -15,9 +15,9 @@ class InstanceDeclarationElement < ValueElement
       if (localName == (FXL::FX_VALUE_ATTRIBUTE))
         @value = value;
       elsif (localName == (FXL::FX_CONSTANT_ATTRIBUTE))
-        constant = value;
+        @constant = value;
       elsif (localName == (FXL::FX_FACTORY_ATTRIBUTE))
-        factory = value;
+        @factory = value;
       else
         dputs callz + "SUPER!"
         super(prefix, localName, value);

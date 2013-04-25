@@ -130,7 +130,7 @@ class Element
       localName = @xmlStreamReader.getAttributeLocalName(i);
       value = @xmlStreamReader.getAttributeValue(i);
 
-      if (@loadListener && prefix && prefix.equals(FXL::FX_NAMESPACE_PREFIX))
+      if (@loadListener && prefix && prefix == (FXL::FX_NAMESPACE_PREFIX))
         @loadListener.readInternalAttribute(prefix + ":" + localName, value);
       end
 
@@ -270,10 +270,10 @@ class Element
         raise PropertyNotFoundException.new("Property \"" + propertyName          + "\" does not exist" + " or is read-only.");
       end
       dputs "checking assignable"
-      if (List.java_class.assignable_from?(type.java_class) && lvalueAdapter.read_only?(propertyName))
+      if (List.java_class.assignable_from?(type) && lvalueAdapter.read_only?(propertyName))
         populateListFromString(lvalueAdapter, propertyName, aValue);
         processed = true;
-      elsif (type.is_a? Enumerable)
+      elsif false #TODO: fix type.ruby_class.ancestors.include? Enumerable
         applyProperty(propertyName, sourceType, populateArrayFromString(type, aValue));
         processed = true;
       end
@@ -395,7 +395,7 @@ class Element
   #TODO: check the types
   def populateListFromString( valueAdapter, listPropertyName,stringValue)
     # Split the string and add the values to the list
-    list =  valueAdapter[listPropertyName]
+    list =  valueAdapter[listPropertyName].to_java
     listType = valueAdapter.getGenericType(listPropertyName);
     itemType =  RubyWrapperBeanAdapter.getGenericListItemType(listType);
 

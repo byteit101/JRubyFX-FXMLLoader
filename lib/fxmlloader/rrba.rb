@@ -391,7 +391,8 @@ class RubyWrapperBeanAdapter
         [String, Java::int.java_class] => to_x.call(:to_i),
         [String,java.lang.Integer.java_class] => to_x.call(:to_i),
         [String, Java::boolean.java_class] => to_bool,
-        [String, Java::javafx.scene.paint.Paint.java_class] => value_of
+        [String, Java::javafx.scene.paint.Paint.java_class] => value_of,
+        [String, Java::java.lang.Object.java_class] => ->(x){x},
       }
       if mapper[[value.class, type]]
         coercedValue = mapper[[value.class, type]].call(value)
@@ -402,7 +403,9 @@ class RubyWrapperBeanAdapter
       # Ruby String :D
     elsif value.class ==  String && type.enum?
       if value[0] == value[0].downcase
-        value = RubyWrapperBeansAdapter.toUpcase value;
+        puts "WHOA Value is not #{value}"
+        #TODO: does this need proper snake casing when upcasting?
+        value = value.upcase
       end
       coercedValue = type.ruby_class.valueOf(value)
     elsif value.respond_to?(:java_class) && value.java_class == Java::java.net.URL.java_class && type == Java::java.lang.String.java_class
