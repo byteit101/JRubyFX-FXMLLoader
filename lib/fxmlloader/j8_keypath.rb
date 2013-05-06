@@ -154,7 +154,7 @@ class KeyPath < AbstractList
 
         c = reader.read();
 
-        while (c != -1 && (java.lang.Character.isJavaIdentifierStart(c) || c == '['))
+        while (c != -1 && (java.lang.Character.java_send(:isJavaIdentifierStart, [Java::int] ,c) || c == '['))
             keyBuilder = StringBuilder.new();
 
              bracketed = (c == '[');
@@ -204,7 +204,7 @@ class KeyPath < AbstractList
 
                 c = reader.read();
              else
-                while(c != -1 && (c != '.' && c != '[' && java.lang.Character.isJavaIdentifierPart(c)))
+                while(c != -1 && (c != '.' && c != '[' && java.lang.Character.java_send(:isJavaIdentifierPart, [Java::int] ,c)))
                     keyBuilder.append(c.chr);
                     c = reader.read();
                 end

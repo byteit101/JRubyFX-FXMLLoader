@@ -58,6 +58,7 @@ class InstanceDeclarationElement < ValueElement
           value.size
         rescue java.lang.UnsupportedOperationException => ex
        dputs "########################## WARNING #############################3"
+       value.class.__persistent__ = true # TODO: JRuby warning
         class << value
           def size
             dputs caller

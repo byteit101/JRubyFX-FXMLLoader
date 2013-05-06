@@ -470,8 +470,6 @@ class FxmlLoader
           begin
             # FIXME: don't use eval!
 						type = eval(name)
-            puts "We successfully eval'ed something... #{name}"
-            p type
 					rescue 
 						# No-op
 					end
