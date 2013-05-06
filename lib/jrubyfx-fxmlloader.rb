@@ -124,6 +124,12 @@ def dprint(*args)
   print *args if $DEBUG_IT_FXML
 end
 
+class Class
+  def ruby_class
+    self
+  end
+end
+
 FXL = java_import('javafx.fxml.FXMLLoader')[0]
 class FxmlLoader
   attr_accessor :location, :root, :template, :builderFactory, :namespace, :staticLoad
@@ -458,7 +464,18 @@ class FxmlLoader
 					end
           break if type
 				end
-
+        unless type
+          # check for ruby
+          # TODO: this should require an import or something perhaps? need to think more about this?
+          begin
+            # FIXME: don't use eval!
+						type = eval(name)
+            puts "We successfully eval'ed something... #{name}"
+            p type
+					rescue 
+						# No-op
+					end
+        end
         @classes[name] = type if type
 			end
 		end
@@ -491,10 +508,6 @@ class FxmlLoader
 		return type;
 	end
 
-	# TODO Rename to loadType() when deprecated static version is removed
-	def loadTypeForPackage(packageName, className)
-		return loadType(packageName, className)
-	end
 
 	def getScriptEngineManager()
 		unless @scriptEngineManager
@@ -505,7 +518,7 @@ class FxmlLoader
 		return @scriptEngineManager;
   end
 
-	def loadType(packageName, className=nil)
+	def loadTypeForPackage(packageName, className=nil)
 		packageName = (packageName + "." + className.gsub('.', '$')) if className
     #TODO: fix for ruby stuff
 		return Java.java.lang.Class::forName(packageName, true, FXL::default_class_loader);
@@ -612,3 +625,4 @@ require_relative 'fxmlloader/elts'
 require_relative 'fxmlloader/value_elts'
 require_relative 'fxmlloader/real_elts'
 require_relative 'fxmlloader/rrba'
+require_relative 'fxmlloader/rorba'

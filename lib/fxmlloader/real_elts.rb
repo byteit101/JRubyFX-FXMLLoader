@@ -44,7 +44,7 @@ class InstanceDeclarationElement < ValueElement
       end
 
       begin
-        value = MethodUtil.invoke(factoryMethod, nil, [],[]);
+        value = MethodUtil.invoke(factoryMethod, nil, []);
       rescue IllegalAccessException => exception
         raise LoadException.new(exception);
       rescue InvocationTargetException => exception
@@ -84,9 +84,9 @@ class InstanceDeclarationElement < ValueElement
       end
       if (value == nil)
         begin
-          dputs callz + "attemping it"
+          dputs callz + "attemping it (#{type} => #{type.inspect})"
           #TODO: does this work?
-          value = ReflectUtil.newInstance(type);
+          value = type.ruby_class.new
           dputs callz + "got taaatempt"
           dprint callz
           dp value
