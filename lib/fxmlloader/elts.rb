@@ -361,7 +361,8 @@ class Element
         return nil;
       end
       dputs callz + "Getting expression '#{aValue}'"
-      q = KeyPath.parse(aValue).map{|i|parentLoader.namespace[i]}
+      # remove all nils, them add one in at the end so [0] returns nil if empty
+      q = (KeyPath.parse(aValue).map{|i|parentLoader.namespace[i]} - [nil] + [nil])[0]
       dputs callz + "Parsed Expression! #{q};;;;#{q.inspect}"
       return q
     end

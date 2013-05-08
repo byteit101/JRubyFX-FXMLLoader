@@ -96,7 +96,7 @@ class KeyPath < AbstractList
         @elements.length.times do |i|
             element = @elements[i]
 
-            if (java.lang.Character.isDigit(element[0].ord))
+            if (java.lang.Character.java_send(:isDigit, [Java::char], element[0].ord))
                 stringBuilder.append("[");
                 stringBuilder.append(element);
                 stringBuilder.append("]");
