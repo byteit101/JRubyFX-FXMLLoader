@@ -360,7 +360,10 @@ class Element
         # The attribute value is nil
         return nil;
       end
-      return Expression.get(@namespace, KeyPath.parse(aValue));
+      dputs callz + "Getting expression '#{aValue}'"
+      q = KeyPath.parse(aValue).map{|i|parentLoader.namespace[i]}
+      dputs callz + "Parsed Expression! #{q};;;;#{q.inspect}"
+      return q
     end
     return aValue;
   end
@@ -463,7 +466,7 @@ class Element
           if (attrValue.length() == 0)
             raise LoadException.new("Missing expression reference.");
           end
-
+          dputs callz + "exprValue!' #{attrValue}'"
           expression = Expression.get(@namespace, KeyPath.parse(attrValue));
           if (expression.is_a? EventHandler)
             eventHandler = expression;

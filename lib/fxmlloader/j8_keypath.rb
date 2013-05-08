@@ -96,7 +96,7 @@ class KeyPath < AbstractList
         @elements.length.times do |i|
             element = @elements[i]
 
-            if (java.lang.Character.isDigit(element[0]))
+            if (java.lang.Character.isDigit(element[0].ord))
                 stringBuilder.append("[");
                 stringBuilder.append(element);
                 stringBuilder.append("]");
@@ -135,7 +135,7 @@ class KeyPath < AbstractList
           p exception
             raise "RuntimeException.new(exception);"
         end
-
+        dputs "We parsed it and got #{keyPath}"
         return keyPath;
     end
 
@@ -233,7 +233,7 @@ class KeyPath < AbstractList
         if (c != -1)
             reader.unread(c);
         end
-
+        dputs "Posting resutls as new of #{elements.to_a.inspect}"
         return KeyPath.new(elements);
     end
 end
