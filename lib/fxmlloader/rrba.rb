@@ -381,6 +381,7 @@ class RubyWrapperBeanAdapter
       to_dbl = ->(x){java.lang.Double.valueOf(x.to_s)}
       to_bool = ->(x){java.lang.Boolean.valueOf(x.to_s)}
       value_of = ->(x){type.ruby_class.valueOf(x.to_s)}
+      # TODO: Java::double[].java_class.component_type
       mapper = {
         [String, java.lang.String.java_class] => dir,
         [Fixnum, java.lang.Integer.java_class] => dir,
@@ -393,12 +394,13 @@ class RubyWrapperBeanAdapter
         [String, Java::boolean.java_class] => to_bool,
         [String, Java::javafx.scene.paint.Paint.java_class] => value_of,
         [String, Java::java.lang.Object.java_class] => ->(x){x},
+        [String, Java::double[].java_class] => ->(x){x.split(/[, ]+/).map(&:to_f)}
       }
       if mapper[[value.class, type]]
         coercedValue = mapper[[value.class, type]].call(value)
       else
         dputs "!! Non-normal RUBY coerce (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}])"
-        raise "oh no!"
+        raise "Unknown Coercion map: (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}]; Please file a bug on this."
       end
       # Ruby String :D
     elsif value.class ==  String && type.enum?
