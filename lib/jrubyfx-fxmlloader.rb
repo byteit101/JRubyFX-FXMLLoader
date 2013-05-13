@@ -96,7 +96,6 @@ com.sun.javafx.fxml.LoadListener
 com.sun.javafx.fxml.ObservableListChangeEvent
 com.sun.javafx.fxml.ObservableMapChangeEvent
 com.sun.javafx.fxml.PropertyChangeEvent
-com.sun.javafx.fxml.expression.Expression
 java.net.MalformedURLException
 java.security.AccessController
 java.security.PrivilegedAction
@@ -699,7 +698,7 @@ require_relative 'fxmlloader/value_elts'
 require_relative 'fxmlloader/real_elts'
 require_relative 'fxmlloader/rrba'
 require_relative 'fxmlloader/rorba'
-require 'FXMLLoader-j8.jar'
+require_relative 'FXMLLoader-j8.jar'
 
 java_import 'org.jruby.jfx8.KeyPath'
 java_import 'org.jruby.jfx8.Expression'

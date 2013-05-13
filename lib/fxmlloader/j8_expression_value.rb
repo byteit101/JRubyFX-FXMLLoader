@@ -164,15 +164,15 @@ class KeyPathMonitor
 
   def monitor(namespace) 
     if (namespace.is_a? ObservableList) 
-      namespace.addListener(@listChangeListener);
+      namespace.java_send :addListener, [Java::javafx.collections.ListChangeListener.java_class],@listChangeListener
     elsif (namespace.is_a? ObservableMap) 
-      namespace.addListener(@mapChangeListener);
+      namespace.java_send :addListener, [Java::javafx.collections.MapChangeListener.java_class], @mapChangeListener
     else 
       namespaceAdapter = RubyWrapperBeanAdapter.for(namespace);
       propertyModel = namespaceAdapter.getPropertyModel(@key).to_java
 
       if (propertyModel != nil) 
-        propertyModel.addListener(@propertyChangeListener);
+        propertyModel.java_send :addListener, [Java::javafx.beans.value.ChangeListener.java_class], @propertyChangeListener
       end
 
       @namespace = namespaceAdapter;
@@ -190,15 +190,15 @@ class KeyPathMonitor
 
   def unmonitor() 
     if (@namespace.is_a? ObservableList) 
-      @namespace.removeListener(@listChangeListener)
+      @namespace.java_send :removeListener, [Java::javafx.collections.ListChangeListener.java_class], @listChangeListener
     elsif (@namespace.is_a? ObservableMap) 
-      @namespace.removeListener(@mapChangeListener)
+      @namespace.java_send :removeListener, [Java::javafx.collections.MapChangeListener.java_class], @mapChangeListener
     elsif (@namespace != nil) 
       namespaceAdapter = @namespace;
       propertyModel = namespaceAdapter.getPropertyModel(@key);
 
       if (propertyModel != nil) 
-        propertyModel.removeListener(@propertyChangeListener);
+        propertyModel.java_send :removeListener, [Java::javafx.beans.value.ChangeListener.java_class], @propertyChangeListener
       end
     end
 
