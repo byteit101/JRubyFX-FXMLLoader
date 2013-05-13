@@ -5,7 +5,8 @@
         <data xmlns="http://www.netbeans.org/ns/ruby-project/1">
             <name>FXMLLoader</name>
             <source-roots>
-                <root id="src.dir"/>
+                <root id="src.dir" name="Ruby Source Files"/>
+                <root id="src.src.dir" name="Java Source Files"/>
             </source-roots>
             <test-roots>
                 <root id="test.src.dir"/>
