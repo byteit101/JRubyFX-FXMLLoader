@@ -302,7 +302,7 @@ class RubyWrapperBeanAdapter
       raise ArgumentError.new();
     end
 
-    return self[key + BeanAdapter.PROPERTY_SUFFIX]
+    return self[key + PROPERTY_SUFFIX]
   end
 
   #    /**
@@ -607,14 +607,14 @@ class RubyWrapperBeanAdapter
     if (value != nil)
       valueClass = nil
 
-    if value.respond_to? :java_class
-      valueClass = value.java_class();
-    elsif value.is_a? String
-      valueClass = java.lang.String.java_class
-    else
-      dp target, sourceType, key, value
-      raise "Shoots TWICE!"
-    end
+      if value.respond_to? :java_class
+        valueClass = value.java_class();
+      elsif value.is_a? String
+        valueClass = java.lang.String.java_class
+      else
+        dp target, sourceType, key, value
+        raise "Shoots TWICE!"
+      end
       setterMethod = getStaticSetterMethod(sourceType, key, valueClass, targetType);
     end
 
@@ -758,13 +758,13 @@ class RubyWrapperBeanAdapter
       genericInterfaces = classType.generic_interfaces();
 
       genericInterfaces.each do |genericInterface|
-dputs "serarcing ingeraface"
-dp genericInterface
+        dputs "serarcing ingeraface"
+        dp genericInterface
         if (genericInterface.is_a? ParameterizedType)
           parameterizedType = genericInterface;
           interfaceType = parameterizedType.getRawType();
-dputs "checking"
-            dp parameterizedType, interfaceType
+          dputs "checking"
+          dp parameterizedType, interfaceType
           if (List.java_class.assignable_from?(interfaceType.java_class)) || (List.java_class.assignable_from?(interfaceType.java_object))
             itemType = parameterizedType.getActualTypeArguments()[0];
             dputs "found it at "
@@ -969,7 +969,7 @@ dputs "checking"
       setMethodName = SET_PREFIX + key;
       begin
         unless rubify
-        method = MethodUtil.getMethod(sourceType, setMethodName,[ targetType, valueType ]);
+          method = MethodUtil.getMethod(sourceType, setMethodName,[ targetType, valueType ]);
         else
           method = sourceType.ruby_class.method(setMethodName)
         end
@@ -1020,5 +1020,13 @@ dputs "checking"
     end
 
     return allCapsBuilder.toString();
+  end
+  
+  def self.for(names)
+    if names.is_a? java.lang.Object
+      RubyWrapperBeanAdapter.new(names)
+    else
+      RubyObjectWrapperBeanAdapter.new(names)
+    end
   end
 end

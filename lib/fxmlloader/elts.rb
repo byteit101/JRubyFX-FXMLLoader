@@ -214,7 +214,6 @@ class Element
     if (isBindingExpression(value))
       dputs callz  + "is a binding !"
       # Resolve the expression
-      expression= nil
 
       if (attribute.sourceType != nil)
         raise LoadException.new("Cannot bind to static property.");
@@ -230,17 +229,24 @@ class Element
         raise LoadException.new("Cannot bind to builder property.");
       end
 
-      value = value[FXL::BINDING_EXPRESSION_PREFIX.length(),
-        value.length() - 1];
+      value = value[2..-2]    # TODO: BINDING_EXPRESSION_PREFIX == ${
+        #value.length() - 1];
+      # TODO: this only works for 7, not 8
+      dputs "getting expression value of '#{value}' with #{parentLoader.namespace}"
       expression = Expression.valueOf(value);
-
+      dputs callz + "got the expression as '#{expression}'"
+      dp expression
       # Create the binding
       targetAdapter = RubyWrapperBeanAdapter.new(@value);
-      propertyModel = targetAdapter.getPropertyModel(attribute.name);
+      dputs callz + "target adapter is #{targetAdapter} from #{value}"
+      propertyModel = targetAdapter.getPropertyModel(attribute.name).to_java
       type = targetAdapter.getType(attribute.name);
-
+      dputs callz + "prop model is #{propertyModel.inspect} and type is #{type.inspect}"
       if (propertyModel.is_a? Property)
-        ( propertyModel).bind(ExpressionValue.new(namespace, expression, type));
+        dputs callz + "checking out value using #{parentLoader.namespace}"
+        #expression.value_property.addListener(JRExpressionTargetMapping.new(expression, getProperties(), Expression.split(value)));
+        ( propertyModel).bind(RRExpressionValue.new(parentLoader.namespace, expression, type));
+        dputs callz + "bound!"
       end
     elsif (isBidirectionalBindingExpression(value))
       raise UnsupportedOperationException.new("This feature is not currently enabled.");
@@ -251,7 +257,11 @@ class Element
   end
 
   def isBindingExpression(aValue)
-    return aValue.start_with?(FXL::BINDING_EXPRESSION_PREFIX) && aValue.end_with?(BINDING_EXPRESSION_SUFFIX);
+    dputs callz + "checking if '#{aValue}' is a binding prefix..."
+    # TODO: BINDING_EXPRESSION_PREFIX == ${
+    q =  aValue.start_with?("${") && aValue.end_with?(FXL::BINDING_EXPRESSION_SUFFIX);
+    dputs callz + "it is? #{q.inspect}"
+    q
   end
 
   def isBidirectionalBindingExpression(aValue)
