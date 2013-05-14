@@ -123,11 +123,15 @@ def dprint(*args)
   print *args if $DEBUG_IT_FXML
 end
 
+# Override to safely get ruby class of non-java_class objects
 class Class
   def ruby_class
     self
   end
 end
+
+#Long to avoid collisions
+MAGIC_FXML_JAVAFX_JRUBYFX_FXMLLOADER__FILE__LOCATION_SUPER_SECRET = __FILE__
 
 FXL = java_import('javafx.fxml.FXMLLoader')[0]
 class FxmlLoader
