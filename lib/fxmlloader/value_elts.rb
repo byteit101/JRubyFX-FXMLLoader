@@ -225,29 +225,29 @@ dputs callz + "Found FXID is #{value}"
         @fx_id = value;
 
       elsif (localName == (FXL::FX_CONTROLLER_ATTRIBUTE))
-        if (current.parent != nil)
+        if (parentLoader.current.parent != nil)
           raise LoadException.new(FXL::FX_NAMESPACE_PREFIX + ":" + FXL::FX_CONTROLLER_ATTRIBUTE		+ " can only be applied to root element.");
         end
 
-dputs callz + "Found controller attrib is #{value} (#{controller}, #{staticLoad})"
-        if (controller != nil)
+dputs callz + "Found controller attrib is #{value} (#{parentLoader.controller}, #{staticLoad})"
+        if (parentLoader.controller != nil)
           raise LoadException.new("Controller value already specified.");
         end
 
         if (!staticLoad)
           type = nil
           begin
-            type = classLoader.loadClass(value);
+            type = parentLoader.constantize(value)
           rescue ClassNotFoundException => exception
             raise LoadException.new(exception);
           end
 
           begin
-            if (controllerFactory == nil)
+            if (parentLoader.controllerFactory == nil)
               # TODO: does this work?
-              setController(ReflectUtil.newInstance(type));
+              parentLoader.controller = type.new
             else
-              setController(controllerFactory.call(type));
+              parentLoder.controller = (parentLoader.controllerFactory.call(type));
             end
           rescue InstantiationException => exception
             raise LoadException.new(exception);

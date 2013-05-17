@@ -21,6 +21,9 @@ class Element
     @staticPropertyElements = []
     @parentLoader = parentLoader
   end
+  def staticLoad
+    @parentLoader.staticLoad
+  end
   def callz
     numz = 1
     pppn = @parent
@@ -186,14 +189,14 @@ class Element
           sourceType = parentLoader.getType(localName[0, i]);
 
         dputs callz + "found static property #{prefix}, #{localName}, #{value}"
-        dputs callz + "and its #{sourceType}, #{@staticLoad}"
+        dputs callz + "and its #{sourceType}, #{staticLoad}"
           if (sourceType != nil)
             if (@loadListener != nil)
               @loadListener.readPropertyAttribute(name, sourceType, value);
             end
 
             @staticPropertyAttributes << (Attribute.new(name, sourceType, value));
-          elsif (@staticLoad)
+          elsif (staticLoad)
             if (@loadListener != nil)
               @loadListener.readUnknownStaticPropertyAttribute(localName, value);
             end

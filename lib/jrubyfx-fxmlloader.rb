@@ -135,7 +135,7 @@ MAGIC_FXML_JAVAFX_JRUBYFX_FXMLLOADER__FILE__LOCATION_SUPER_SECRET = __FILE__
 
 FXL = java_import('javafx.fxml.FXMLLoader')[0]
 class FxmlLoader
-  attr_accessor :location, :root, :template, :builderFactory, :namespace, :staticLoad
+  attr_accessor :location, :root, :template, :builderFactory, :namespace, :staticLoad, :current, :controllerFactory
   attr_reader :controller
   FX_NAMESPACE_VERSION="1"
   def initialize(url=nil, ctrlr=nil, resourcs=nil, buildFactory=nil, charset=nil, loaders=nil)
