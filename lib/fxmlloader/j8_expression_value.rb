@@ -79,7 +79,8 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
   end
 
     
-  def getValue() 
+  def getValue()
+    dputs "gettng 8ev for #{self} on #{@expression}"
     return RubyWrapperBeanAdapter.coerce(@expression.evaluate(@namespace), @type);
   end
 
@@ -149,7 +150,10 @@ class KeyPathMonitor
         
 
     @propertyChangeListener = ChangeListener.impl do |name, observable, oldValue, newValue|
+      dputs "Normal property changed #{name}, #{observable}, #{oldValue}, #{newValue} for #{@key}"
       if (@key == (observable.getName())) 
+        dputs "FIRE!"
+        
         @this.fireValueChangedEvent();
         remonitor();
       end
@@ -170,7 +174,7 @@ class KeyPathMonitor
     else 
       namespaceAdapter = RubyWrapperBeanAdapter.for(namespace);
       propertyModel = namespaceAdapter.getPropertyModel(@key).to_java
-
+      dputs "properyt model is now #{propertyModel}"
       if (propertyModel != nil) 
         propertyModel.java_send :addListener, [Java::javafx.beans.value.ChangeListener.java_class], @propertyChangeListener
       end

@@ -140,7 +140,6 @@ class FxmlLoader
   FX_NAMESPACE_VERSION="1"
   def initialize(url=nil, ctrlr=nil, resourcs=nil, buildFactory=nil, charset=nil, loaders=nil)
     @location = url
-    @controller = ctrlr
     @builderFactory = buildFactory || JavaFXBuilderFactory.new
     @template = false
     if resourcs
@@ -152,6 +151,7 @@ class FxmlLoader
       dp loaders
     end
     @namespace = FXCollections.observableHashMap()
+    self.controller = ctrlr
     @packages = []
     @classes = {}
     @root = nil
@@ -160,7 +160,7 @@ class FxmlLoader
 
   def controller=(controller)
     @controller = controller
-    if controller
+    unless controller
       @namespace.delete(FXL::CONTROLLER_KEYWORD)
     else
       @namespace[FXL::CONTROLLER_KEYWORD] = controller
@@ -168,6 +168,7 @@ class FxmlLoader
   end
 
   def load()
+    dp "This is the namespace", @namespace
     # TODO: actually open it properly
     inputStream = @location.open_stream
     if @template

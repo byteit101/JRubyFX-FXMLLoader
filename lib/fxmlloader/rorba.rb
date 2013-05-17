@@ -118,6 +118,14 @@ class RubyObjectWrapperBeanAdapter
     end
     @bean.send(key + "GetType")
   end
+  
+  def getPropertyModel(key)
+    if (key == nil)
+      raise ArgumentError.new();
+    end
+
+    return @bean.send("#{key}Property")
+  end
 
   def coerce(value, type)
     RubyWrapperBeanAdapter.coerce(value, type)

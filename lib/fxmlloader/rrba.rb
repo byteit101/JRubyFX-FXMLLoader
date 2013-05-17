@@ -24,31 +24,6 @@
  */
 =end
 
-#package com.sun.javafx.fxml;
-#
-#import java.lang.reflect.InvocationTargetException;
-#import java.lang.reflect.Method;
-#import java.lang.reflect.Modifier;
-#import java.lang.reflect.ParameterizedType;
-#import java.lang.reflect.Type;
-#import java.lang.reflect.TypeVariable;
-#import java.math.BigDecimal;
-#import java.math.BigInteger;
-#import java.util.AbstractMap;
-#import java.util.Arrays;
-#import java.util.HashMap;
-#import java.util.LinkedList;
-#import java.util.List;
-#import java.util.Map;
-#import java.util.Set;
-#
-#import java.lang.reflect.*;
-#
-#import javafx.@beans.value.ObservableValue;
-#import sun.reflect.misc.FieldUtil;
-#import sun.reflect.misc.MethodUtil;
-#import sun.reflect.misc.ReflectUtil;
-
 #/**
 # * Exposes Java Bean properties of an object via the {@link Mapend interface.
 # * A call to {@link Map#get(Object)end invokes the getter for the corresponding
