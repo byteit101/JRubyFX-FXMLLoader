@@ -54,6 +54,7 @@ class Element
   end
 
   def add(element)
+    dputs callz + "about to add #{element} to #{value.to_java}"
     # If value is a list, add element to it; otherwise, get the value
     # of the default property, which is assumed to be a list and add
     # to that (coerce to the appropriate type)
@@ -72,7 +73,8 @@ class Element
         listType = @valueAdapter.getGenericType(defaultPropertyName);
         element = RubyWrapperBeanAdapter.coerce(element, RubyWrapperBeanAdapter.getListItemType(listType));
       end
-      list.to_java
+      list = list.to_java if list.class == Java::JavaObject
+      list
     end.add(element)
   end
 

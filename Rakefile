@@ -45,6 +45,7 @@ task :gem => :jar
 spec = Gem::Specification.new do |s|
   s.name = 'jrubyfx-fxmlloader'
   s.version = '0.2'
+  s.platform    = 'java'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README', 'LICENSE']
   s.summary = 'GPL\'d JavaFX FXMLLoder class in Ruby for JRubyFX'
