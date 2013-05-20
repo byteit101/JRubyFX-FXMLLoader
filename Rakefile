@@ -35,6 +35,7 @@ end
 
 task :java_clean do
   ant.delete(:dir => build_dir)
+  ant.delete(:dir => "pkg")
   ant.delete(:file => "lib/FXMLLoader-j8.jar")
 end
 
@@ -54,7 +55,8 @@ spec = Gem::Specification.new do |s|
   s.email = 'simonpatp@gmail.com'
   s.homepage = "https://github.com/byteit101/JRubyFX-FXMLLoader"
   # s.executables = ['your_executable_here']
-  s.files = %w(LICENSE README Rakefile) + Dir.glob("{bin,lib,spec}/**/*")
+  # manually specify it to avoid globbing issues
+  s.files = %w(LICENSE README Rakefile lib/FXMLLoader-j8.jar) + Dir.glob("{bin,lib,spec}/**/*")
   s.require_path = "lib"
   s.bindir = "bin"
 end
