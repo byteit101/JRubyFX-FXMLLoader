@@ -362,13 +362,15 @@ class RubyWrapperBeanAdapter
         [Fixnum, java.lang.Integer.java_class] => dir,
         [Float, java.lang.Double.java_class] => dir,
         [Float, Java::double.java_class] => dir,
+        [FalseClass, Java::boolean.java_class] => dir,
+        [TrueClass, Java::boolean.java_class] => dir,
         [String, Java::double.java_class] => to_dbl,
         [String, java.lang.Double.java_class] => to_dbl,
         [String, Java::int.java_class] => to_x.call(:to_i),
         [String,java.lang.Integer.java_class] => to_x.call(:to_i),
         [String, Java::boolean.java_class] => to_bool,
         [String, Java::javafx.scene.paint.Paint.java_class] => value_of,
-        [String, Java::java.lang.Object.java_class] => ->(x){x},
+        [String, Java::java.lang.Object.java_class] => dir,
         [String, Java::double[].java_class] => ->(x){x.split(/[, ]+/).map(&:to_f)}
       }
       if mapper[[value.class, type]]
@@ -996,7 +998,7 @@ class RubyWrapperBeanAdapter
 
     return allCapsBuilder.toString();
   end
-  
+
   def self.for(names)
     if names.is_a? java.lang.Object
       RubyWrapperBeanAdapter.new(names)
