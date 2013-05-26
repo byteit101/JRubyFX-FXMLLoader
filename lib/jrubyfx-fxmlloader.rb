@@ -130,9 +130,6 @@ class Class
   end
 end
 
-#Long to avoid collisions
-MAGIC_FXML_JAVAFX_JRUBYFX_FXMLLOADER__FILE__LOCATION_SUPER_SECRET = __FILE__
-
 FXL = java_import('javafx.fxml.FXMLLoader')[0]
 class FxmlLoader
   attr_accessor :location, :root, :template, :builderFactory, :namespace, :staticLoad, :current, :controllerFactory
@@ -443,7 +440,7 @@ class FxmlLoader
 			raise LoadException.new(exception);
 		end
 	end
-  
+
   # steal handy methods from activesupport
   # Tries to find a constant with the name specified in the argument string.
   #
@@ -549,7 +546,7 @@ class FxmlLoader
           # TODO: this should require an import or something perhaps? need to think more about this?
           begin
 						type = constantize(name)
-					rescue 
+					rescue
 						# No-op
 					end
         end
