@@ -288,7 +288,7 @@ class Element
         dp sourceType, propertyName, aValue
         dp lvalueAdapter
         dp caller
-        raise PropertyNotFoundException.new("Property \"" + propertyName          + "\" does not exist" + " or is read-only.");
+        raise("Property \"" + propertyName          + "\" does not exist" + " or is read-only.");
       end
       dputs "checking assignable"
       if (List.java_class.assignable_from?(type) && lvalueAdapter.read_only?(propertyName))
