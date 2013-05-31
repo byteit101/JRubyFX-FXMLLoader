@@ -203,7 +203,7 @@ class RubyWrapperBeanAdapter
       dputs caller
       dputs "error in []=!"
       dp key, value, @bean
-      raise PropertyNotFoundException.new("Property \"" + key + "\" does not exist"                + " or is read-only.");
+      raise ("Property \"" + key + "\" does not exist"                + " or is read-only.");
     end
     begin
       ty = getType(key)
