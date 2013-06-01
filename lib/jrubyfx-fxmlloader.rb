@@ -132,7 +132,8 @@ end
 
 FXL = java_import('javafx.fxml.FXMLLoader')[0]
 class FxmlLoader
-  attr_accessor :location, :root, :template, :builderFactory, :namespace, :staticLoad, :current, :controllerFactory
+  attr_accessor :location, :root, :template, :builderFactory, :namespace, :staticLoad, :current, :controllerFactory, :charset
+  attr_accessor :scriptEngine
   attr_reader :controller
   FX_NAMESPACE_VERSION="1"
   def initialize(url=nil, ctrlr=nil, resourcs=nil, buildFactory=nil, charset=nil, loaders=nil)
@@ -258,8 +259,8 @@ class FxmlLoader
 
 		unless staticLoad
 			scriptEngineManager = getScriptEngineManager()
-			scriptEngine = scriptEngineManager.getEngineByName(language)
-			scriptEngine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE)
+			@scriptEngine = scriptEngineManager.getEngineByName(language)
+			@scriptEngine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE)
     end
   end
 

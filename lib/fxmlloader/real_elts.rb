@@ -23,7 +23,7 @@ class InstanceDeclarationElement < ValueElement
         super(prefix, localName, value);
       end
     else
-        dputs callz + "SUPER2!"
+      dputs callz + "SUPER2!"
       super(prefix, localName, value);
     end
   end
@@ -57,31 +57,31 @@ class InstanceDeclarationElement < ValueElement
         begin
           value.size
         rescue java.lang.UnsupportedOperationException => ex
-       dputs "########################## WARNING #############################3"
-       value.class.__persistent__ = true # TODO: JRuby warning
-        class << value
-          def size
-            dputs caller
-            dputs "size waz called!"
-            6
-          end
-          def [](x)
-            get(x)
-          end
-          def []=(x,y)
-            put(x,y)
-          end
-          def has_key?(x)
-            containsKey(x)
-          end
-          def to_s
-            "something interesting...."
-          end
-          def inspect
-            "something equally interesting...."
+          dputs "########################## WARNING #############################3"
+          value.class.__persistent__ = true # TODO: JRuby warning
+          class << value
+            def size
+              dputs caller
+              dputs "size waz called!"
+              6
+            end
+            def [](x)
+              get(x)
+            end
+            def []=(x,y)
+              put(x,y)
+            end
+            def has_key?(x)
+              containsKey(x)
+            end
+            def to_s
+              "something interesting...."
+            end
+            def inspect
+              "something equally interesting...."
+            end
           end
         end
-      end
       end
       if (value == nil)
         begin
@@ -257,8 +257,8 @@ class ReferenceElement < ValueElement
   @source = nil;
 
   def processAttribute(prefix, localName, value)
-dputs callz + "processing attrib"
-dp prefix, localName, value
+    dputs callz + "processing attrib"
+    dp prefix, localName, value
     if (prefix == nil)
       if (localName == (FXL::REFERENCE_SOURCE_ATTRIBUTE))
         if (loadListener != nil)
@@ -475,10 +475,10 @@ class PropertyElement < Element
       listType = parent.getValueAdapter().getGenericType(name);
       dputs callz + "Typed and list type is #{listType}"
       lit = RubyWrapperBeanAdapter.getListItemType(listType)
-# FIXME: HACK!
-    if element.class.inspect == "Java::JavaNet::URL"
-      lit = Java::java.lang.String.java_class
-    end
+      # FIXME: HACK!
+      if element.class.inspect == "Java::JavaNet::URL"
+        lit = Java::java.lang.String.java_class
+      end
 
       element = RubyWrapperBeanAdapter.coerce(element, lit);
     end
@@ -507,7 +507,7 @@ class PropertyElement < Element
   end
 
   def processAttribute( prefix,  localName,  value)
-dputs (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
+    dputs (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
     if (!readOnly)
       raise LoadException.new("Attributes are not supported for writable property elements.");
     end
@@ -517,7 +517,7 @@ dputs (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
 
   def processEndElement()
     super();
-dputs (callz) +"ENDENDLT "
+    dputs (callz) +"ENDENDLT "
     if (readOnly)
       processInstancePropertyAttributes();
       processEventHandlerAttributes();
@@ -568,118 +568,118 @@ class UnknownStaticPropertyElement < Element
 end
 
 # Element representing a script block
-#	class ScriptElement < Element
-#    # TODO:  fix
-#		 @source = nil;
-#		@charset = parentLoader.charset;
-#
-#		def isCollection()
-#			return false;
-#		end
+class ScriptElement < Element
+  def initialize(current, xmlStreamReader, loadListener, parentLoader)
+    super
+    @source = nil;
+    @charset = parentLoader.charset;
+  end
 
-#		def processStartElement()
-#			super();
-#
-#			if (source != nil && !staticLoad)
-#				int i = source.rindex(".");
-#				if (i == -1)
-#					raise LoadException.new("Cannot determine type of script \""											+ source + "\".");
-#				end
-#
-#				extension = source[(i + 1)..-1];
-#				scriptEngine = nil
-#        #TODO: use JRUBY stuff
-#				oldLoader = Thread.currentThread().getContextClassLoader();
-#				begin
-#					Thread.currentThread().setContextClassLoader(classLoader);
-#					scriptEngineManager = getScriptEngineManager();
-#					scriptEngine = scriptEngineManager.getEngineByExtension(extension);
-#        ensure
-#					Thread.currentThread().setContextClassLoader(oldLoader);
-#				end
-#
-#				if (scriptEngine == nil)
-#					raise LoadException.new("Unable to locate scripting engine for"											+ " extension " + extension + ".");
-#				end
-#
-#				scriptEngine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE);
-#
-#				begin
-#					location = nil
-#					if (source[0] == '/')
-#						location = classLoader.getResource(source[(1)..-1]);
-#					else
-#						if (parentLoader.location == nil)
-#							raise LoadException.new("Base location is undefined.");
-#						end
-#
-#						location = URL.new(parentLoader.location, source);
-#					end
-#
-#					InputStreamReader scriptReader = nil;
-#					begin
-#						scriptReader = InputStreamReader.new(location.openStream(), charset);
-#						scriptEngine.eval(scriptReader);
-#					rescue ScriptException => exception
-#						exception.printStackTrace();
-#					end
-#					finally
-#						if (scriptReader != nil)
-#							scriptReader.close();
-#						end
-#					end
-#				rescue IOException => exception
-#					raise LoadException.new(exception);
-#				end
-#			end
-#		end
-#
-#		def processEndElement()
-#			super();
-#
-#			if (value != nil && !staticLoad)
-#				# Evaluate the script
-#				begin
-#					scriptEngine.eval((String) value);
-#				rescue ScriptException => exception
-#					System.err.println(exception.getMessage());
-#				end
-#			end
-#		end
-#
-#		def processCharacters()
-#			if (source != nil)
-#				raise LoadException.new("Script source already specified.");
-#			end
-#
-#			if (scriptEngine == nil && !staticLoad)
-#				raise LoadException.new("Page language not specified.");
-#			end
-#
-#			updateValue(xmlStreamReader.getText());
-#		end
-#
-#		def processAttribute(String prefix, String localName, String value)
-#
-#			if (prefix == nil
-#				&& localName == (FXL::SCRIPT_SOURCE_ATTRIBUTE))
-#				if (loadListener != nil)
-#					loadListener.readInternalAttribute(localName, value);
-#				end
-#
-#				source = value;
-#			elsif (localName == (FXL::SCRIPT_CHARSET_ATTRIBUTE))
-#				if (loadListener != nil)
-#					loadListener.readInternalAttribute(localName, value);
-#				end
-#
-#				charset = Charset.forName(value);
-#			else
-#				raise LoadException.new(prefix == nil ? localName : prefix + ":" + localName
-#																	 + " is not a valid attribute.");
-#			end
-#		end
-#	end
+  def isCollection()
+    return false;
+  end
+
+  def processStartElement()
+    super();
+
+    if (@source != nil && !staticLoad)
+      i = @source.rindex(".");
+      if (i == nil)
+        raise ("Cannot determine type of script \""											+ @source + "\".");
+      end
+      dputs callz + "in the script bowels"
+      extension = @source[(i + 1)..-1];
+      scriptEngine = nil
+      #TODO: use JRUBY stuff
+      oldLoader = Thread.currentThread().getContextClassLoader();
+      begin
+        Thread.currentThread().setContextClassLoader(classLoader);
+        scriptEngineManager = getScriptEngineManager();
+        scriptEngine = scriptEngineManager.getEngineByExtension(extension);
+      ensure
+        Thread.currentThread().setContextClassLoader(oldLoader);
+      end
+
+      if (scriptEngine == nil)
+        raise ("Unable to locate scripting engine for"											+ " extension " + extension + ".");
+      end
+
+      scriptEngine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE);
+
+      begin
+        location = nil
+        if (@source[0] == '/')
+          location = classLoader.getResource(@source[(1)..-1]);
+        else
+          if (parentLoader.location == nil)
+            raise LoadException.new("Base location is undefined.");
+          end
+
+          location = URL.new(parentLoader.location, @source);
+        end
+
+        InputStreamReader scriptReader = nil;
+        begin
+          scriptReader = InputStreamReader.new(location.openStream(), @charset);
+          scriptEngine.eval(scriptReader);
+        rescue ScriptException => exception
+          exception.printStackTrace();
+        ensure
+          if (scriptReader != nil)
+            scriptReader.close();
+          end
+        end
+      rescue IOException => exception
+        raise LoadException.new(exception);
+      end
+    end
+  end
+
+  def processEndElement()
+    super();
+    dputs callz + "end elet of scripter, #{value}, #{parentLoader.staticLoad}"
+    if (value != nil && !parentLoader.staticLoad)
+      # Evaluate the script
+      begin
+        dputs callz + "Evaling the script!"
+        dp parentLoader.scriptEngine.eval( value.to_s);
+      rescue ScriptException => exception
+       STDERR.puts (exception.getMessage());
+      end
+    end
+  end
+
+  def processCharacters()
+    if (@source != nil)
+      raise LoadException.new("Script source already specified.");
+    end
+
+    if (parentLoader.scriptEngine == nil && !parentLoader.staticLoad)
+      raise LoadException.new("Page language not specified.");
+    end
+    dputs callz + "updating srcpt values!"
+    updateValue(xmlStreamReader.getText());
+  end
+
+  def processAttribute(prefix, localName, value)
+    dputz callz + "processing Attribbs for scripts #{prefix}, #{localName}, #{value}"
+    if (prefix == nil        && localName == (FXL::SCRIPT_SOURCE_ATTRIBUTE))
+      if (loadListener != nil)
+        loadListener.readInternalAttribute(localName, value);
+      end
+
+      @source = value;
+    elsif (localName == (FXL::SCRIPT_CHARSET_ATTRIBUTE))
+      if (loadListener != nil)
+        loadListener.readInternalAttribute(localName, value);
+      end
+
+      @charset = Charset.forName(value);
+    else
+      raise LoadException.new(prefix == nil ? localName : prefix + ":" + localName        + " is not a valid attribute.");
+    end
+  end
+end
 
 # Element representing a define block
 class DefineElement < Element

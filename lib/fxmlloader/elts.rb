@@ -120,7 +120,7 @@ class Element
       end
       if @value.is_a? java.lang.Object
         dputs callz + "trying to call wrapper"
-      @valueAdapter = RubyWrapperBeanAdapter.new(@value);
+        @valueAdapter = RubyWrapperBeanAdapter.new(@value);
       else
         dputs callz + "trying to call ruby object wrapper"
         @valueAdapter = RubyObjectWrapperBeanAdapter.new(@value)
@@ -183,15 +183,15 @@ class Element
             @loadListener.readPropertyAttribute(localName, nil, value);
           end
 
-        dputs callz + "found property attrib #{prefix}, #{localName}, #{value}"
+          dputs callz + "found property attrib #{prefix}, #{localName}, #{value}"
           instancePropertyAttributes << (Attribute.new(localName, nil, value));
         else
           # The attribute represents a static property
           name = localName[(i + 1)..-1];
           sourceType = parentLoader.getType(localName[0, i]);
 
-        dputs callz + "found static property #{prefix}, #{localName}, #{value}"
-        dputs callz + "and its #{sourceType}, #{staticLoad}"
+          dputs callz + "found static property #{prefix}, #{localName}, #{value}"
+          dputs callz + "and its #{sourceType}, #{staticLoad}"
           if (sourceType != nil)
             if (@loadListener != nil)
               @loadListener.readPropertyAttribute(name, sourceType, value);
@@ -235,7 +235,7 @@ class Element
       end
 
       value = value[2..-2]    # TODO: BINDING_EXPRESSION_PREFIX == ${
-        #value.length() - 1];
+      #value.length() - 1];
       # TODO: this only works for 7, not 8
       dputs "getting expression value of '#{value}' with #{parentLoader.namespace}"
       expression = Expression.valueOf(value);
@@ -490,12 +490,12 @@ class Element
 
         end
         if (eventHandler == nil)
-          if (attrValue.length() == 0 || @scriptEngine == nil)
+          if (attrValue.length() == 0 || parentLoader.scriptEngine == nil)
             raise LoadException.new("Error resolving " + attribute.name + "='" + attribute.value +
                 "', either the event handler is not in the Namespace or there is an error in the script.");
           end
 
-          eventHandler = ScriptEventHandler.new(attrValue, @scriptEngine);
+          eventHandler = ScriptEventHandler.new(attrValue, parentLoader.scriptEngine);
         end
         # Add the handler
         if (eventHandler != nil)
@@ -560,5 +560,31 @@ class EventHandlerWrapper
     else
       dputs "Warning: method #{@funcName} was not found on controller #{@ctrl}"
     end
+  end
+end
+
+class ScriptEventHandler
+  include EventHandler
+  def initialize(script, scriptEngine)
+    @script = script;
+    @scriptEngine = scriptEngine;
+  end
+
+  def handle(event)
+    # Don't pollute the page namespace with values defined in the script
+    engineBindings = @scriptEngine.getBindings(ScriptContext::ENGINE_SCOPE);
+    localBindings = @scriptEngine.createBindings();
+    localBindings.put(FXL::EVENT_KEY, event);
+    @scriptEngine.setBindings(localBindings, ScriptContext::ENGINE_SCOPE);
+
+    # Execute the script
+    begin
+      @scriptEngine.eval(@script);
+    rescue ScriptException => exception
+      raise RuntimeException.new(exception);
+    end
+
+    # Restore the original bindings
+    @scriptEngine.setBindings(engineBindings, ScriptContext::ENGINE_SCOPE);
   end
 end
