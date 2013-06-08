@@ -23,36 +23,19 @@
 # * questions.
 # */
 
-#package com.sun.javafx.fxml.expression;
-#
-#import java.util.ArrayList;
-#import java.util.Iterator;
-#import java.util.List;
-#
-#import javafx.beans.InvalidationListener;
-#import javafx.beans.property.ReadOnlyProperty;
-#import javafx.beans.value.ChangeListener;
-#import javafx.beans.value.ObservableValue;
-#import javafx.beans.value.ObservableValueBase;
-#import javafx.collections.ListChangeListener;
-#import javafx.collections.MapChangeListener;
-#import javafx.collections.ObservableList;
-#import javafx.collections.ObservableMap;
-#
-#import com.sun.javafx.fxml.BeanAdapter;
 
 #/**
 # * Class representing an observable expression value.
 # */
 class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
   #// Monitors a namespace for changes along a key path
-    
+
 
 
   def initialize(namespace, expression, type)
     super()
     dputs "Initializing with #{namespace}, #{expression}, #{type}"
-    if (namespace == nil) 
+    if (namespace == nil)
       raise "NullPointerException.new();"
     end
 
@@ -60,7 +43,7 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
       raise "NullPointerException.new();"
     end
 
-    if (type == nil) 
+    if (type == nil)
       raise "NullPointerException.new();"
     end
 
@@ -78,14 +61,14 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
     end
   end
 
-    
+
   def getValue()
     dputs "gettng 8ev for #{self} on #{@expression}"
     return RubyWrapperBeanAdapter.coerce(@expression.evaluate(@namespace), @type);
   end
 
-  def addListener( listener) 
-    if (@listenerCount == 0) 
+  def addListener( listener)
+    if (@listenerCount == 0)
       monitorArguments();
     end
 
@@ -93,90 +76,111 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
     @listenerCount += 1
   end
 
-  def removeListener( listener) 
+  def removeListener( listener)
     super(listener);
     @listenerCount-=1
 
-    if (@listenerCount == 0) 
+    if (@listenerCount == 0)
       unmonitorArguments();
     end
   end
 
-  def monitorArguments() 
+  def monitorArguments()
     for  argumentMonitor in @argumentMonitors
       argumentMonitor.monitor(@namespace);
     end
   end
 
-  def unmonitorArguments() 
+  def unmonitorArguments()
     for  argumentMonitor in   @argumentMonitors
       argumentMonitor.unmonitor();
     end
   end
 end
 
-                    
-class KeyPathMonitor 
+
+class KeyPathMonitor
   @key = nil;
   @next = nil
 
   @namespace = nil;
 
-        
 
-  def initialize(this, keyPathIterator) 
+
+  def initialize(this, keyPathIterator)
     @key = keyPathIterator.next();
     @this = this
-    
-          
+
+
     @listChangeListener = ListChangeListener.impl do |name, change|
-      while (@change.next()) 
+      while (@change.next())
         index = @key.to_i
 
-        if (index >= change.getFrom() && index < change.getTo()) 
+        if (index >= change.getFrom() && index < change.getTo())
           @this.fireValueChangedEvent();
           remonitor();
         end
       end
     end
-        
+
 
     @mapChangeListener = MapChangeListener.impl do |name, change|
-      if (@key == (change.getKey())) 
+      if (@key == (change.getKey()))
         @this.fireValueChangedEvent();
         remonitor();
       end
     end
-        
+
 
     @propertyChangeListener = ChangeListener.impl do |name, observable, oldValue, newValue|
       dputs "Normal property changed #{name}, #{observable}, #{oldValue}, #{newValue} for #{@key}"
-      if (@key == (observable.getName())) 
+      if (@key == (observable.getName()))
         dputs "FIRE!"
-        
+
         @this.fireValueChangedEvent();
         remonitor();
       end
     end
 
-    if (keyPathIterator.hasNext()) 
+    if (keyPathIterator.hasNext())
       @next = KeyPathMonitor.new(this, keyPathIterator);
-    else 
+    else
       @next = nil;
     end
   end
 
-  def monitor(namespace) 
-    if (namespace.is_a? ObservableList) 
-      namespace.java_send :addListener, [Java::javafx.collections.ListChangeListener.java_class],@listChangeListener
-    elsif (namespace.is_a? ObservableMap) 
-      namespace.java_send :addListener, [Java::javafx.collections.MapChangeListener.java_class], @mapChangeListener
-    else 
+  def monitor(namespace)
+    if (namespace.is_a? ObservableList)
+      old_verbose = $VERBOSE
+      begin
+        $VERBOSE = nil
+        namespace.addListener @listChangeListener
+      ensure
+        # always re-set to old value, even if block raises an exception
+        $VERBOSE = old_verbose
+      end
+    elsif (namespace.is_a? ObservableMap)
+      old_verbose = $VERBOSE
+      begin
+        $VERBOSE = nil
+        namespace.addListener @mapChangeListener
+      ensure
+        # always re-set to old value, even if block raises an exception
+        $VERBOSE = old_verbose
+      end
+    else
       namespaceAdapter = RubyWrapperBeanAdapter.for(namespace);
       propertyModel = namespaceAdapter.getPropertyModel(@key).to_java
       dputs "properyt model is now #{propertyModel}"
-      if (propertyModel != nil) 
-        propertyModel.java_send :addListener, [Java::javafx.beans.value.ChangeListener.java_class], @propertyChangeListener
+      if (propertyModel != nil)
+        old_verbose = $VERBOSE
+        begin
+          $VERBOSE = nil
+          propertyModel.addListener @propertyChangeListener
+        ensure
+          # always re-set to old value, even if block raises an exception
+          $VERBOSE = old_verbose
+        end
       end
 
       @namespace = namespaceAdapter;
@@ -184,60 +188,64 @@ class KeyPathMonitor
 
     @namespace = namespace;
 
-    if (@next != nil) 
+    if (@next != nil)
       value = Expression.get(@namespace, @key)
-      if (value != nil) 
+      if (value != nil)
         @next.monitor(value);
       end
     end
   end
 
-  def unmonitor() 
-    if (@namespace.is_a? ObservableList) 
-      @namespace.java_send :removeListener, [Java::javafx.collections.ListChangeListener.java_class], @listChangeListener
-    elsif (@namespace.is_a? ObservableMap) 
-      @namespace.java_send :removeListener, [Java::javafx.collections.MapChangeListener.java_class], @mapChangeListener
-    elsif (@namespace != nil) 
+  def unmonitor()
+    if (@namespace.is_a? ObservableList)
+      old_verbose = $VERBOSE
+      begin
+        $VERBOSE = nil
+        @namespace.removeListener @listChangeListener
+      ensure
+        # always re-set to old value, even if block raises an exception
+        $VERBOSE = old_verbose
+      end
+    elsif (@namespace.is_a? ObservableMap)
+      old_verbose = $VERBOSE
+      begin
+        $VERBOSE = nil
+        @namespace.removeListener @mapChangeListener
+      ensure
+        # always re-set to old value, even if block raises an exception
+        $VERBOSE = old_verbose
+      end
+    elsif (@namespace != nil)
       namespaceAdapter = @namespace;
       propertyModel = namespaceAdapter.getPropertyModel(@key);
 
-      if (propertyModel != nil) 
-        propertyModel.java_send :removeListener, [Java::javafx.beans.value.ChangeListener.java_class], @propertyChangeListener
+      if (propertyModel != nil)
+        old_verbose = $VERBOSE
+        begin
+          $VERBOSE = nil
+          propertyModel.removeListener @propertyChangeListener
+        ensure
+          # always re-set to old value, even if block raises an exception
+          $VERBOSE = old_verbose
+        end
       end
     end
 
     @namespace = nil;
 
-    if (@next != nil) 
+    if (@next != nil)
       @next.unmonitor();
     end
   end
 
-  def remonitor() 
-    if (@next != nil) 
+  def remonitor()
+    if (@next != nil)
       @next.unmonitor();
       value = Expression.get(@namespace, @key);
-      if (value != nil) 
+      if (value != nil)
         @next.monitor(value);
       end
     end
   end
 end
 
-#class JRExpressionTargetMapping < ChangeListener
-#
-#    def initialize(paramExpression,  paramObject, paramList)
-#    
-#      @source = paramExpression;
-#      @target = paramObject;
-#      @path = paramList;
-#    end
-#
-#    def changed(ov, ol, ne)
-#    
-#      if (@source.isDefined())
-#        Expression.set(@target, @path, @source.getValue());
-#      end
-#    end
-#end
- 
