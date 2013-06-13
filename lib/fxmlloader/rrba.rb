@@ -1000,7 +1000,7 @@ class RubyWrapperBeanAdapter
   end
 
   def self.for(names)
-    if names.is_a? java.lang.Object
+    if names.is_a? java.lang.Object or (names.is_a? Java::JavaObject and (names = names.to_java))
       RubyWrapperBeanAdapter.new(names)
     else
       RubyObjectWrapperBeanAdapter.new(names)

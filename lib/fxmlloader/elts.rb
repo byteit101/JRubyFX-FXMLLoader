@@ -118,13 +118,7 @@ class Element
       if @value.class.to_s == "Java::JavafxFxml::ObjectBuilder"
         dputs caller
       end
-      if @value.is_a? java.lang.Object
-        dputs callz + "trying to call wrapper"
-        @valueAdapter = RubyWrapperBeanAdapter.new(@value);
-      else
-        dputs callz + "trying to call ruby object wrapper"
-        @valueAdapter = RubyObjectWrapperBeanAdapter.new(@value)
-      end
+      @valueAdapter = RubyWrapperBeanAdapter.for(@value)
       dputs callz + "got"
     end
     return @valueAdapter;
