@@ -103,6 +103,9 @@ dputs "staticpro"
         RubyWrapperBeanAdapter.put(value, element.sourceType, element.name, element.value);
       end
     end
+
+    rnest -1
+    rputs value, "end"
 dputs "parentS>AS"
     if (parent != nil)
       if (parent.isCollection())
@@ -198,6 +201,7 @@ dputs "parentS>AS"
 
       if (valueAdapter.read_only?(defaultPropertyName) && List.class.isAssignableFrom(valueAdapter.getType(defaultPropertyName)))
         list = valueAdapter.get(defaultPropertyName);
+        puts "pchars add!!!!"
         list.add(getListValue(self, defaultPropertyName, text));
       else
         valueAdapter.put(defaultPropertyName, text.strip);

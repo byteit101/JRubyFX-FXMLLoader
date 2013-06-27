@@ -103,6 +103,8 @@ class InstanceDeclarationElement < ValueElement
       end
     end
 
+    rputs value, "build(#{type}) do"
+    rnest 1
     return value;
   end
 end
@@ -484,7 +486,7 @@ class PropertyElement < Element
     end
 
     # Add the item to the list
-    super(element);
+    super(element, name);
   end
 
   def set( value)

@@ -208,6 +208,13 @@ class RubyWrapperBeanAdapter
     begin
       ty = getType(key)
       co = coerce(value, ty)
+      coi = co.inspect
+      if co.is_a? Java::JavaLang::Enum
+        coi = "#{co.class.inspect}::#{co.to_s}"
+      elsif rget(value)
+        coi = rget(value)
+      end
+    rputs @bean, "#{setterMethod.name}(#{coi})" unless coi.start_with? "#<"
       setterMethod.invoke(@bean, co );
     rescue IllegalAccessException => exception
       dp "issues1"
@@ -611,6 +618,7 @@ class RubyWrapperBeanAdapter
 
     # Invoke the setter
     begin
+      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{value.inspect})"
       getStaticSetterMethod(sourceType, key, valueClass, targetType, true).call(target.java_object, value);
     rescue InvocationTargetException => exception
       raise "RuntimeException.new(exception);"

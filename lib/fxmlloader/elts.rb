@@ -53,14 +53,19 @@ class Element
     return collection;
   end
 
-  def add(element)
+  def add(element, prop_name=nil)
     dputs callz + "about to add #{element} to #{value.to_java}"
     # If value is a list, add element to it; otherwise, get the value
     # of the default property, which is assumed to be a list and add
     # to that (coerce to the appropriate type)
     if (@value.kind_of?(Enumerable) || @value.java_kind_of?(java.util.List))
+      if prop_name == nil
+        raise "ERROR! no prop name specified while adding on elts"
+      end
+      rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rget(element)})"
       value.to_java
     else
+      puts "aaahadfa #{element}"
       type = value.java_class
       defaultProperty = type.annotation(DefaultProperty.java_class);
       defaultPropertyName = defaultProperty.to_java.value();
@@ -575,7 +580,7 @@ class ScriptEventHandler
     begin
       @scriptEngine.eval(@script);
     rescue ScriptException => exception
-      raise RuntimeException.new(exception);
+      raise exception
     end
 
     # Restore the original bindings

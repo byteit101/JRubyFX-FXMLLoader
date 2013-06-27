@@ -122,7 +122,31 @@ end
 def dprint(*args)
   print *args if $DEBUG_IT_FXML
 end
-
+def rp(*args)
+  p *args if $DEBUG_IT_FXML_RB
+end
+$RB_PREFIX = ""
+def rnest(num)
+  if num > 0
+    $RB_PREFIX += " "
+  else
+    $RB_PREFIX = $RB_PREFIX[0...-1]
+  end
+end
+$RB_MAPPER = {}
+def rputs(elt, args)
+  if $DEBUG_IT_FXML_RB
+    $RB_MAPPER[elt] = "" unless $RB_MAPPER[elt]
+    $RB_MAPPER[elt] << $RB_PREFIX
+    $RB_MAPPER[elt] << args
+    $RB_MAPPER[elt] << "\n"
+  end
+end
+def rget(elt)
+  tmp = $RB_MAPPER[elt]
+  tmp.strip! if tmp
+  tmp
+end
 # Override to safely get ruby class of non-java_class objects
 class Class
   def ruby_class
@@ -227,6 +251,7 @@ class FxmlLoader
       @controller.instance_variable_set("@" + FXL::RESOURCES_KEY, @resources)
     end
 
+    puts rget @root
 
     @xmlStreamReader = nil
     return @root
