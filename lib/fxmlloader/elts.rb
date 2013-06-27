@@ -444,6 +444,7 @@ class Element
   end
 
   def applyProperty(name,  sourceType, value)
+    dputs callz + " Source type, name, value are (#{sourceType}, #{name}, #{value})"
     if (sourceType == nil)
       getProperties[name] = value
     else
@@ -545,6 +546,7 @@ end
 
 class EventHandlerWrapper
   include EventHandler
+  attr_reader :funcName
   def initialize(ctrl, funcName)
     @ctrl = ctrl
     @funcName = funcName

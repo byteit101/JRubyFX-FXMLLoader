@@ -1,3 +1,51 @@
+class OBJFXBuilderWrapper < Java::java.util.AbstractMap
+  include Java::javafx.util.Builder
+  def initialize(safeobj)
+    super()
+    @obj = safeobj
+  end
+
+  def wrapped_class
+    @obj.class
+  end
+
+  def on_put(&on_put)
+    @on_put = on_put
+  end
+
+  def build
+    @obj.build.tap{|x| rmorph self, x}
+  end
+
+  def containsKey(o)
+    @obj.containsKey(o)
+  end
+
+  def get(o)
+    @obj.get(o)
+  end
+
+  def put(k, v)
+    @on_put.call(k, v) if @on_put
+    @obj.put(k, v)
+  end
+
+  def [](o)
+    get(o)
+  end
+  def []=(k, v)
+    put(k, v)
+  end
+
+  def entrySet
+    java.util.HashMap.new({}).entrySet
+  end
+
+  def inspect
+    "#<ObjectBuilderWrapper:#{__id__} child=#{@obj.class.inspect}>"
+  end
+end
+
 class InstanceDeclarationElement < ValueElement
   attr_accessor :type, :constant, :factory
 
@@ -58,27 +106,32 @@ class InstanceDeclarationElement < ValueElement
           value.size
         rescue java.lang.UnsupportedOperationException => ex
           dputs "########################## WARNING #############################3"
-          value.class.__persistent__ = true # TODO: JRuby warning
-          class << value
-            def size
-              dputs caller
-              dputs "size waz called!"
-              6
-            end
-            def [](x)
-              get(x)
-            end
-            def []=(x,y)
-              put(x,y)
-            end
-            def has_key?(x)
-              containsKey(x)
-            end
-            def to_s
-              "something interesting...."
-            end
-            def inspect
-              "something equally interesting...."
+          # value.class.__persistent__ = true # TODO: JRuby warning
+          if true
+            value = OBJFXBuilderWrapper.new(value)
+            value.on_put {|k, v| rctor value, k, v }
+          else
+            class << value
+              def size
+                dputs caller
+                dputs "size waz called!"
+                6
+              end
+              def [](x)
+                get(x)
+              end
+              def []=(x,y)
+                put(x,y)
+              end
+              def has_key?(x)
+                containsKey(x)
+              end
+              def to_s
+                "something interesting...."
+              end
+              def inspect
+                "something equally interesting...."
+              end
             end
           end
         end
@@ -468,7 +521,6 @@ class PropertyElement < Element
     dprint callz
     dp element
     dp element.class
-    dp element.java_class
     if element.class.inspect == "Java::JavaNet::URL"
       # element = element.java_object
     end
@@ -646,7 +698,7 @@ class ScriptElement < Element
         dputs callz + "Evaling the script!"
         dp parentLoader.scriptEngine.eval( value.to_s);
       rescue ScriptException => exception
-       STDERR.puts (exception.getMessage());
+        STDERR.puts (exception.getMessage());
       end
     end
   end

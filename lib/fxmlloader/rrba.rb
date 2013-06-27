@@ -211,10 +211,20 @@ class RubyWrapperBeanAdapter
       coi = co.inspect
       if co.is_a? Java::JavaLang::Enum
         coi = "#{co.class.inspect}::#{co.to_s}"
+      elsif co.is_a? EventHandlerWrapper
+        coi = "EventHandlerWrapper.new(__local_fxml_controller, #{co.funcName.inspect})"
       elsif rget(value)
         coi = rget(value)
+      elsif co.is_a? Java::javafx.scene.paint.Paint
+        coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
+      elsif coi.start_with? "#<"
+        puts "ignoring #{setterMethod.name}(#{coi})
+        How about #{setterMethod.name}(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?
+
+        "
+        coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
       end
-    rputs @bean, "#{setterMethod.name}(#{coi})" unless coi.start_with? "#<"
+      rputs @bean, "#{setterMethod.name}(#{coi})"
       setterMethod.invoke(@bean, co );
     rescue IllegalAccessException => exception
       dp "issues1"
@@ -353,7 +363,7 @@ class RubyWrapperBeanAdapter
     if (value == nil)
       # Null values can only be coerced to nil
       coercedValue = nil;
-    elsif (value.is_a?(EventHandlerWrapper) && type == Java.javafx.event.EventHandler.java_class) || (value.respond_to?(:java_class) && !value.is_a?(EventHandlerWrapper) && type.assignable_from?(value.java_class))
+    elsif type == java.lang.Object.java_class || (value.is_a?(EventHandlerWrapper) && type == Java.javafx.event.EventHandler.java_class) || (value.respond_to?(:java_class) && !value.is_a?(EventHandlerWrapper) && type.assignable_from?(value.java_class))
       # Value doesn't require coercion
       coercedValue = value;
     elsif !value.respond_to?(:java_class) && !type.enum?

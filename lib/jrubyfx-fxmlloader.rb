@@ -122,9 +122,6 @@ end
 def dprint(*args)
   print *args if $DEBUG_IT_FXML
 end
-def rp(*args)
-  p *args if $DEBUG_IT_FXML_RB
-end
 $RB_PREFIX = ""
 def rnest(num)
   if num > 0
@@ -134,12 +131,25 @@ def rnest(num)
   end
 end
 $RB_MAPPER = {}
+$RB_CMAPPER = {}
 def rputs(elt, args)
   if $DEBUG_IT_FXML_RB
     $RB_MAPPER[elt] = "" unless $RB_MAPPER[elt]
     $RB_MAPPER[elt] << $RB_PREFIX
     $RB_MAPPER[elt] << args
     $RB_MAPPER[elt] << "\n"
+    puts "#{elt.inspect.ljust(60)}: #{$RB_PREFIX}#{args}"
+  end
+end
+
+def rmorph(old, new)
+  $RB_MAPPER[new] = "build(FxmlBuilderBuilder, #{$RB_CMAPPER[old].inspect}, #{old.wrapped_class}) do\n"
+end
+
+def rctor(elt, k, v)
+  if $DEBUG_IT_FXML_RB
+    $RB_CMAPPER[elt] = {} unless $RB_CMAPPER[elt]
+    $RB_CMAPPER[elt][k] = v
   end
 end
 def rget(elt)
@@ -147,6 +157,18 @@ def rget(elt)
   tmp.strip! if tmp
   tmp
 end
+
+class FxmlBuilderBuilder # the builder builder (builds builders)
+  def self.new(arg_map, builder_class)
+    builder = builder_class.new
+    arg_map.each do |k, v|
+      builder.put(k, v) # DON't use []= or we have to wrap it
+    end
+    builder.build
+  end
+end
+
+
 # Override to safely get ruby class of non-java_class objects
 class Class
   def ruby_class
