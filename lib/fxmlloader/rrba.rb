@@ -208,7 +208,7 @@ class RubyWrapperBeanAdapter
     begin
       ty = getType(key)
       co = coerce(value, ty)
-      coi = RubyWrapperBeanAdapter.jit_export(co, value, ty)
+      coi = RubyWrapperBeanAdapter.jit_export(co, value, ty, setterMethod)
       rputs @bean, "#{setterMethod.name}(#{coi})"
       setterMethod.invoke(@bean, co );
     rescue IllegalAccessException => exception
@@ -321,7 +321,7 @@ class RubyWrapperBeanAdapter
     RubyWrapperBeanAdapter.coerce(value, type)
   end
 
-  def self.jit_export(co, value, ty)
+  def self.jit_export(co, value, ty, setter)
     coi = co.inspect
     if co.is_a? Java::JavaLang::Enum
       coi = "Java::#{co.java_class.name.gsub(/[\$\.]/, "::")}::#{co.to_s}"
@@ -333,6 +333,8 @@ class RubyWrapperBeanAdapter
       coi = tmp
     elsif co.is_a? Java::javafx.scene.paint.Paint
       coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty.ruby_class}.java_class)"
+    elsif setter.respond_to? :varargs? and setter.varargs?
+      coi = "*#{coi}"
     elsif coi.start_with? "#<"
       puts "ignoring setting(#{coi})
         How about setting(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?
@@ -635,7 +637,7 @@ class RubyWrapperBeanAdapter
 
     # Invoke the setter
     begin
-      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{jit_export(value, value, targetType)})"
+      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{jit_export(value, value, targetType, setterMethod)})"
       getStaticSetterMethod(sourceType, key, valueClass, targetType, true).call(target.java_object, value);
     rescue InvocationTargetException => exception
       raise "RuntimeException.new(exception);"
