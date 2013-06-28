@@ -60,9 +60,10 @@ class Element
     # to that (coerce to the appropriate type)
     if (@value.kind_of?(Enumerable) || @value.java_kind_of?(java.util.List))
       if prop_name == nil
-        raise "ERROR! no prop name specified while adding on elts"
+        rputs value, "add(#{rget(element)||element.inspect})"
+      else
+        rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rget(element)||element.inspect})"
       end
-      rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rget(element)||element.inspect})"
       value.to_java
     else
       type = value.java_class

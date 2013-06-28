@@ -134,15 +134,33 @@ end
 $RB_MAPPER = {}
 $RB_CMAPPER = {}
 $RB_IDMAPPER = {}
+$RB_NShowMAPPER = {}
 $last_elt = nil
+
+def rno_show(elt)
+  $RB_NShowMAPPER[elt]=true
+end
+def rno_show?(elt)
+  !!$RB_NShowMAPPER[elt]
+end
+
+def rmap_wrap(elt)
+  if elt.kind_of? Java::ComSunJavafxCollections::ObservableListWrapper
+    SecretHashCompararator.new(elt)
+  else
+    elt
+  end
+end
 def rputs(elt, args)
   if $DEBUG_IT_FXML_RB
     if elt == nil
       elt = $last_elt
     else
-      $last_elt = elt
+      $last_elt = elt = rmap_wrap(elt)
     end
-    $RB_MAPPER[elt] = "" unless $RB_MAPPER[elt]
+    unless $RB_MAPPER[elt]
+      $RB_MAPPER[elt] = ""
+    end
     $RB_MAPPER[elt] << $RB_PREFIX
     $RB_MAPPER[elt] << args
     $RB_MAPPER[elt] << "\n"
@@ -150,6 +168,7 @@ def rputs(elt, args)
 end
 
 def rfx_id(elt, val=nil)
+  elt = rmap_wrap elt
   if val
     $RB_IDMAPPER[elt] = val
   else
@@ -157,19 +176,23 @@ def rfx_id(elt, val=nil)
   end
 end
 def rfx_id_set?(elt)
+  elt = rmap_wrap elt
   !$RB_MAPPER[elt] or $RB_MAPPER[elt].include? "instance_variable_get(#{("@" + rfx_id(elt)).to_sym.inspect})"
 end
 def rmorph(old, new)
+  elt = rmap_wrap elt
   $RB_MAPPER[new] = "build(FxmlBuilderBuilder, #{($RB_CMAPPER[old]||{}).inspect}, #{old.wrapped_class.ruby_class.inspect}) do\n"
 end
 
 def rctor(elt, k, v)
   if $DEBUG_IT_FXML_RB
+    elt = rmap_wrap elt
     $RB_CMAPPER[elt] = {} unless $RB_CMAPPER[elt]
     $RB_CMAPPER[elt][k] = v
   end
 end
 def rget(elt, action=:nuke_from_standard_orbit_captain)
+  elt = rmap_wrap elt
   tmp = $RB_MAPPER[elt]
   tmp.strip! if tmp
   $RB_MAPPER[elt] = rfx_id(elt) ? "__local_fxml_controller.instance_variable_get(#{("@" + rfx_id(elt)).to_sym.inspect})" : nil
@@ -196,6 +219,22 @@ def rsem_out
   end
 end
 
+class SecretHashCompararator
+  attr_accessor :obj
+  def initialize(obj)
+    @obj = obj
+  end
+  def hash
+    @obj.object_id
+  end
+  def eql?(rhs)
+    self == rhs
+  end
+  def ==(rhs)
+    @obj.object_id == rhs.object_id or (rhs.is_a? SecretHashCompararator and @obj.object_id == rhs.hash)
+  end
+end
+
 class FxmlBuilderBuilder # the builder builder (builds builders)
   @@bf = Java::javafx.fxml.JavaFXBuilderFactory.new
   def self.new(arg_map, builder_type)
@@ -207,6 +246,25 @@ class FxmlBuilderBuilder # the builder builder (builds builders)
   end
 end
 
+class FactoryBuilderBuilder # builder to build factories
+  def self.new(type, factory)
+    type = type.java_class
+    factoryMethod = nil
+    begin
+      factoryMethod = MethodUtil.getMethod(type, factory, []);
+    rescue NoSuchMethodException => exception
+      raise LoadException.new(exception);
+    end
+
+    begin
+      return MethodUtil.invoke(factoryMethod, nil, []);
+    rescue IllegalAccessException => exception
+      raise LoadException.new(exception);
+    rescue InvocationTargetException => exception
+      raise LoadException.new(exception);
+    end
+  end
+end
 
 # Override to safely get ruby class of non-java_class objects
 class Class
@@ -337,6 +395,9 @@ class FxmlLoader
     $RB_IDMAPPER = {}
     $RB_MAPPER = {}
     $RB_PREFIX = ""
+    $RB_NShowMAPPER = {}
+    $last_elt = nil
+    $RB_SCRIPT_ENGINE_MAPPINGS = {}
 
     @xmlStreamReader = nil
     return @root

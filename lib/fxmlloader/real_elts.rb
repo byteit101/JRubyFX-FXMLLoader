@@ -134,8 +134,14 @@ class InstanceDeclarationElement < ValueElement
         dputs callz + "parent loader is #{parentLoader.builderFactory} and got #{value} for #{type} (#{value.inspect} #{type.inspect}, #{parentLoader.builderFactory.inspect})"
       end
     end
-
-    rputs value, "build(#{type.ruby_class}) do"
+    if factory
+      rputs value, "build(FactoryBuilderBuilder, #{type.ruby_class}, #{factory.inspect}) do"
+    elsif @value
+      rno_show(value)
+      rputs value, value.inspect
+    else
+      rputs value, "build(#{type.ruby_class}) do"
+    end
     rnest 1
     return value;
   end
@@ -428,7 +434,6 @@ class RootElement < ValueElement
 
       value = root;
     end
-p "saving value on", value, root
     rputs value, "with(__local_fxml_controller) do"
     rnest 1
     return value;

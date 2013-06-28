@@ -105,7 +105,7 @@ dputs "staticpro"
     end
 
     rnest -1
-    rputs value, (rfx_id(value) ? (rfx_id_set?(value) ? "" : "end") : "end")
+    rputs value, ((rfx_id(value) && rfx_id_set?(value)) || rno_show?(value) ? ""  : "end")
 dputs "parentS>AS"
     if (parent != nil)
       if (parent.isCollection())
