@@ -315,8 +315,6 @@ class FxmlLoader
     # TODO: actually open it properly
     unless jit_info = @@fxml_jit_info[file_path = @location.to_s]
       jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, jit)
-    else
-      jit_info.jit_settings = jit
     end
     inputStream = @location.open_stream
     if @template
@@ -333,8 +331,16 @@ class FxmlLoader
     $DEBUG_IT_FXML_RB = jit_info.should_jit?
     # if we have it cached, use the jitted method
     if jit_info.compiled?
-      puts "jitting for #{@location.to_s}"
-      return jit_info.__build_via_jit(@controller, @namespace)
+      begin
+        return jit_info.__build_via_jit(@controller, @namespace)
+      rescue Error, java.lang.Throwable
+        puts "JIT compiled method for #{@location.to_s} FAILED with error:"
+        puts $!
+        puts $!.backtrace
+        puts "Reverting to normal parsing..."
+        jit_info.jit_settings = :no_jit
+        jit_info.decompile
+      end
     end
 
     begin
@@ -384,11 +390,11 @@ class FxmlLoader
       @controller.instance_variable_set("@" + FXL::RESOURCES_KEY, @resources)
     end
     if $DEBUG_IT_FXML_RB
-      puts  "-"*50
-      puts "   #{@location.to_s}:"
+      dputs  "-"*50
+      dputs "    JIT'ing code for  #{@location.to_s}:"
       code = "#{rsem_out}\n#{rget @root}"
-      puts code
-      puts  "-"*50
+      dputs code
+      dputs  "-"*50
       jit_info.compile(code)
     end
     $RB_CMAPPER = {}

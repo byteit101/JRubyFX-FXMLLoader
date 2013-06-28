@@ -46,6 +46,9 @@ class FxmlJitInfo
   def compiled?
     @jitted == true
   end
+  def decompile
+    @jitted = false
+  end
   def compile(code=@raw_code)
     @raw_code = code
     # TODO: begin rescue end
