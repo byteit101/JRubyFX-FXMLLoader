@@ -62,10 +62,9 @@ class Element
       if prop_name == nil
         raise "ERROR! no prop name specified while adding on elts"
       end
-      rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rget(element)})"
+      rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rget(element)||element.inspect})"
       value.to_java
     else
-      puts "aaahadfa #{element}"
       type = value.java_class
       defaultProperty = type.annotation(DefaultProperty.java_class);
       defaultPropertyName = defaultProperty.to_java.value();
@@ -78,6 +77,7 @@ class Element
         listType = @valueAdapter.getGenericType(defaultPropertyName);
         element = RubyWrapperBeanAdapter.coerce(element, RubyWrapperBeanAdapter.getListItemType(listType));
       end
+      rputs @value, "get#{defaultPropertyName[0].upcase}#{defaultPropertyName[1..-1]}.add(#{rget(element)||element.inspect})"
       list = list.to_java if list.class == Java::JavaObject
       list
     end.add(element)

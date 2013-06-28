@@ -208,22 +208,7 @@ class RubyWrapperBeanAdapter
     begin
       ty = getType(key)
       co = coerce(value, ty)
-      coi = co.inspect
-      if co.is_a? Java::JavaLang::Enum
-        coi = "#{co.class.inspect}::#{co.to_s}"
-      elsif co.is_a? EventHandlerWrapper
-        coi = "EventHandlerWrapper.new(__local_fxml_controller, #{co.funcName.inspect})"
-      elsif rget(value)
-        coi = rget(value)
-      elsif co.is_a? Java::javafx.scene.paint.Paint
-        coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
-      elsif coi.start_with? "#<"
-        puts "ignoring #{setterMethod.name}(#{coi})
-        How about #{setterMethod.name}(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?
-
-        "
-        coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
-      end
+      coi = RubyWrapperBeanAdapter.jit_export(co, value, ty)
       rputs @bean, "#{setterMethod.name}(#{coi})"
       setterMethod.invoke(@bean, co );
     rescue IllegalAccessException => exception
@@ -334,6 +319,26 @@ class RubyWrapperBeanAdapter
 
   def coerce(value, type)
     RubyWrapperBeanAdapter.coerce(value, type)
+  end
+
+  def self.jit_export(co, value, ty)
+    coi = co.inspect
+    if co.is_a? Java::JavaLang::Enum
+      coi = "#{co.class.inspect}::#{co.to_s}"
+    elsif co.is_a? EventHandlerWrapper
+      coi = "EventHandlerWrapper.new(__local_fxml_controller, #{co.funcName.inspect})"
+    elsif rget(value)
+      coi = rget(value)
+    elsif co.is_a? Java::javafx.scene.paint.Paint
+      coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
+    elsif coi.start_with? "#<"
+      puts "ignoring setting(#{coi})
+        How about setting(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?
+
+      "
+      coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
+    end
+    return coi
   end
   #    /**
   #     * Coerces a value to a given type.
@@ -628,7 +633,7 @@ class RubyWrapperBeanAdapter
 
     # Invoke the setter
     begin
-      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{value.inspect})"
+      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{jit_export(value, value, targetType)})"
       getStaticSetterMethod(sourceType, key, valueClass, targetType, true).call(target.java_object, value);
     rescue InvocationTargetException => exception
       raise "RuntimeException.new(exception);"

@@ -138,7 +138,6 @@ def rputs(elt, args)
     $RB_MAPPER[elt] << $RB_PREFIX
     $RB_MAPPER[elt] << args
     $RB_MAPPER[elt] << "\n"
-    puts "#{elt.inspect.ljust(60)}: #{$RB_PREFIX}#{args}"
   end
 end
 
