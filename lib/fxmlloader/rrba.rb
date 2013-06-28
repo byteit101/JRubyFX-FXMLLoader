@@ -327,8 +327,8 @@ class RubyWrapperBeanAdapter
       coi = "Java::#{co.java_class.name.gsub(/[\$\.]/, "::")}::#{co.to_s}"
     elsif co.is_a? EventHandlerWrapper
       coi = "EventHandlerWrapper.new(__local_fxml_controller, #{co.funcName.inspect})"
-    elsif rget(value)
-      coi = rget(value)
+    elsif tmp = rget(value)
+      coi = tmp
     elsif co.is_a? Java::javafx.scene.paint.Paint
       coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
     elsif coi.start_with? "#<"

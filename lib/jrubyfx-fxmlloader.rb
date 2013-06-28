@@ -132,6 +132,7 @@ def rnest(num)
 end
 $RB_MAPPER = {}
 $RB_CMAPPER = {}
+$RB_IDMAPPER = {}
 def rputs(elt, args)
   if $DEBUG_IT_FXML_RB
     $RB_MAPPER[elt] = "" unless $RB_MAPPER[elt]
@@ -141,6 +142,16 @@ def rputs(elt, args)
   end
 end
 
+def rfx_id(elt, val=nil)
+  if val
+    $RB_IDMAPPER[elt] = val
+  else
+    $RB_IDMAPPER[elt]
+  end
+end
+def rfx_id_set?(elt)
+  !$RB_MAPPER[elt] or $RB_MAPPER[elt].include? "instance_variable_get(#{("@" + rfx_id(elt)).to_sym.inspect})"
+end
 def rmorph(old, new)
   $RB_MAPPER[new] = "build(FxmlBuilderBuilder, #{($RB_CMAPPER[old]||{}).inspect}, #{old.wrapped_class.ruby_class.inspect}) do\n"
 end
@@ -151,9 +162,11 @@ def rctor(elt, k, v)
     $RB_CMAPPER[elt][k] = v
   end
 end
-def rget(elt)
+def rget(elt, action=:nuke_from_standard_orbit_captain)
   tmp = $RB_MAPPER[elt]
   tmp.strip! if tmp
+  $RB_MAPPER[elt] = rfx_id(elt) ? "__local_fxml_controller.instance_variable_get(#{("@" + rfx_id(elt)).to_sym.inspect})" : nil
+
   tmp
 end
 
