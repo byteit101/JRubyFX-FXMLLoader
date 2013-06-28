@@ -1,5 +1,17 @@
-== FXMLLoader
+# JRubyFX-FxmlLoader
 
-Use with JRubyFX.
+JRubyFX-FxmlLoader is the JIT-enabled FXML parser for the JRubyFX project based
+on the official OpenJDK 8 FXML parser. FxmlLoader strives to be a nearly drop-in
+replacement FxmlLoader, only differing in JRuby compatibility.
 
-rake gem to build
+At this point,
+most code is directly copied from OpenJDK and converted to ruby via regexes and
+as such is far from idiomatic ruby. The JIT compiler is also a work in progress.
+
+If you would like to help clean up the code please do but be careful about breaking
+FXML. Any 100% standard Java FXML document should work *identically* when run as a JRuby FXML document and
+vice-versa with the exception of JRuby support (like ruby classes & controllers).
+
+Use with JRubyFX!
+
+rake gem to build. Note that half of this project is java and must be compiled.
