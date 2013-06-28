@@ -566,6 +566,7 @@ end
 
 class ScriptEventHandler
   include EventHandler
+  attr_reader :script, :scriptEngine
   def initialize(script, scriptEngine)
     @script = script;
     @scriptEngine = scriptEngine;

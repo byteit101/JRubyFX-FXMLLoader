@@ -122,6 +122,7 @@ end
 def dprint(*args)
   print *args if $DEBUG_IT_FXML
 end
+# TODO: clean this up
 $RB_PREFIX = ""
 def rnest(num)
   if num > 0
@@ -133,8 +134,14 @@ end
 $RB_MAPPER = {}
 $RB_CMAPPER = {}
 $RB_IDMAPPER = {}
+$last_elt = nil
 def rputs(elt, args)
   if $DEBUG_IT_FXML_RB
+    if elt == nil
+      elt = $last_elt
+    else
+      $last_elt = elt
+    end
     $RB_MAPPER[elt] = "" unless $RB_MAPPER[elt]
     $RB_MAPPER[elt] << $RB_PREFIX
     $RB_MAPPER[elt] << args
@@ -168,6 +175,25 @@ def rget(elt, action=:nuke_from_standard_orbit_captain)
   $RB_MAPPER[elt] = rfx_id(elt) ? "__local_fxml_controller.instance_variable_get(#{("@" + rfx_id(elt)).to_sym.inspect})" : nil
 
   tmp
+end
+$RB_SCRIPT_ENGINE_MAPPINGS = {}
+def rputs_script(sem, lang)
+  $RB_SCRIPT_ENGINE_MAPPINGS[sem] = lang
+end
+
+def rget_sem(sem)
+  $RB_SCRIPT_ENGINE_MAPPINGS[sem]
+end
+
+def rsem_out
+  if $RB_SCRIPT_ENGINE_MAPPINGS != {}
+    ["(__local_sem_inst = Java.javax.script.ScriptEngineManager.new).setBindings(javax.script.SimpleBindings.new(__local_namespace))",
+      *$RB_SCRIPT_ENGINE_MAPPINGS.map{|sem, lang|
+        "(__local_sem_lang_inst_#{lang} = __local_sem_inst.getEngineByName(#{lang.inspect}))" +
+          ".setBindings(__local_sem_inst.getBindings(), javax.script.ScriptContext.ENGINE_SCOPE)"
+      }
+    ].join("\n")
+  end
 end
 
 class FxmlBuilderBuilder # the builder builder (builds builders)
@@ -250,7 +276,7 @@ class FxmlLoader
     # if we have it cached, use the jitted method
     if jit_info.compiled?
       puts "jitting for #{@location.to_s}"
-      return jit_info.__build_via_jit(@controller)
+      return jit_info.__build_via_jit(@controller, @namespace)
     end
 
     begin
@@ -302,7 +328,7 @@ class FxmlLoader
     if $DEBUG_IT_FXML_RB
       puts  "-"*50
       puts "   #{@location.to_s}:"
-      code = rget @root
+      code = "#{rsem_out}\n#{rget @root}"
       puts code
       puts  "-"*50
       jit_info.compile(code)
@@ -344,6 +370,7 @@ class FxmlLoader
 		unless staticLoad
 			scriptEngineManager = getScriptEngineManager()
 			@scriptEngine = scriptEngineManager.getEngineByName(language)
+      rputs_script @scriptEngine, language
 			@scriptEngine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE)
     end
   end

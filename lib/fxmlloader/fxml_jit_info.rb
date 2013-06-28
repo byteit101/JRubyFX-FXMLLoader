@@ -50,7 +50,11 @@ class FxmlJitInfo
     @raw_code = code
     # TODO: begin rescue end
     self.instance_eval <<METHOD_DEF
-    def __build_via_jit(__local_fxml_controller)
+    def __build_via_jit(__local_fxml_controller, __local_namespace)
+      __local_fx_id_setter = lambda do |name, __i|
+        __local_namespace[name] = __i
+        __local_fxml_controller.instance_variable_set(("@\#{name}").to_sym, __i)
+      end
 #{code}
     end
 METHOD_DEF

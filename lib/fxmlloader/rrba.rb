@@ -327,6 +327,8 @@ class RubyWrapperBeanAdapter
       coi = "Java::#{co.java_class.name.gsub(/[\$\.]/, "::")}::#{co.to_s}"
     elsif co.is_a? EventHandlerWrapper
       coi = "EventHandlerWrapper.new(__local_fxml_controller, #{co.funcName.inspect})"
+    elsif co.is_a? ScriptEventHandler
+      coi = "ScriptEventHandler.new(#{co.script.inspect}, __local_sem_lang_inst_#{rget_sem(co.scriptEngine)})"
     elsif tmp = rget(value)
       coi = tmp
     elsif co.is_a? Java::javafx.scene.paint.Paint

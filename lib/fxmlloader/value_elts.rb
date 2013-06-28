@@ -105,7 +105,7 @@ dputs "staticpro"
     end
 
     rnest -1
-    rputs value, (rfx_id(value) ? (rfx_id_set?(value) ? "" : "end.tap{|__i|__local_fxml_controller.instance_variable_set(#{("@" + rfx_id(value)).to_sym.inspect}, __i)}") : "end")
+    rputs value, (rfx_id(value) ? (rfx_id_set?(value) ? "" : "end.tap{|__i|__local_fx_id_setter.call(#{rfx_id(value).inspect}, __i)}") : "end")
 dputs "parentS>AS"
     if (parent != nil)
       if (parent.isCollection())

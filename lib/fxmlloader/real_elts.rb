@@ -677,6 +677,7 @@ class ScriptElement < Element
       # Evaluate the script
       begin
         dputs callz + "Evaling the script!"
+        rputs nil, "__local_sem_lang_inst_#{rget_sem(parentLoader.scriptEngine)}.eval(#{value.to_s.inspect})"
         dp parentLoader.scriptEngine.eval( value.to_s);
       rescue ScriptException => exception
         STDERR.puts (exception.getMessage());
