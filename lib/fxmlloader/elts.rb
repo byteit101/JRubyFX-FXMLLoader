@@ -248,6 +248,7 @@ class Element
       dputs callz + "prop model is #{propertyModel.inspect} and type is #{type.inspect}"
       if (propertyModel.is_a? Property)
         dputs callz + "checking out value using #{parentLoader.namespace}"
+        rputs @value, "#{attribute.name}Property.bind(RRExpressionValue.new(__local_namespace, Java::org.jruby.jfx8.Expression.valueOf(#{value.inspect}), Java::#{type.name.gsub(/[\$\.]/, "::")}.java_class))"
         #expression.value_property.addListener(JRExpressionTargetMapping.new(expression, getProperties(), Expression.split(value)));
         ( propertyModel).bind(RRExpressionValue.new(parentLoader.namespace, expression, type));
         dputs callz + "bound!"

@@ -105,7 +105,7 @@ dputs "staticpro"
     end
 
     rnest -1
-    rputs value, (rfx_id(value) ? (rfx_id_set?(value) ? "" : "end.tap{|__i|__local_fx_id_setter.call(#{rfx_id(value).inspect}, __i)}") : "end")
+    rputs value, (rfx_id(value) ? (rfx_id_set?(value) ? "" : "end") : "end")
 dputs "parentS>AS"
     if (parent != nil)
       if (parent.isCollection())
@@ -177,6 +177,7 @@ dputs "parentS>AS"
         end
       end
       dputs callz+ "About to set instance variable #{@fx_id}"
+      rputs value, "__local_fx_id_setter.call(#{@fx_id.inspect}, self)"
       rfx_id value, @fx_id
       # Set the controller field value
       if (parentLoader.controller != nil)
