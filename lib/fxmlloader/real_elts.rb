@@ -135,7 +135,7 @@ class InstanceDeclarationElement < ValueElement
       end
     end
 
-    rputs value, "build(#{type}) do"
+    rputs value, "build(#{type.ruby_class}) do"
     rnest 1
     return value;
   end
@@ -428,7 +428,9 @@ class RootElement < ValueElement
 
       value = root;
     end
-
+p "saving value on", value, root
+    rputs value, "with(__local_fxml_controller) do"
+    rnest 1
     return value;
   end
 end

@@ -330,13 +330,13 @@ class RubyWrapperBeanAdapter
     elsif tmp = rget(value)
       coi = tmp
     elsif co.is_a? Java::javafx.scene.paint.Paint
-      coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
+      coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty.ruby_class}.java_class)"
     elsif coi.start_with? "#<"
       puts "ignoring setting(#{coi})
         How about setting(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?
 
       "
-      coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})"
+      coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty.ruby_class}.java_class)"
     end
     return coi
   end

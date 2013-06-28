@@ -195,6 +195,7 @@ class FxmlLoader
   attr_accessor :scriptEngine
   attr_reader :controller
   FX_NAMESPACE_VERSION="1"
+  @@fxml_jit_info = {}
   def initialize(url=nil, ctrlr=nil, resourcs=nil, buildFactory=nil, charset=nil, loaders=nil)
     @location = url
     @builderFactory = buildFactory || JavaFXBuilderFactory.new
@@ -224,9 +225,15 @@ class FxmlLoader
     end
   end
 
-  def load()
+  # either :no_jit, or a number above 0 representing the number of times before jitting a fxml file
+  def load(jit=0)
     dp "This is the namespace", @namespace
     # TODO: actually open it properly
+    unless jit_info = @@fxml_jit_info[file_path = @location.to_s]
+      jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, jit)
+    else
+      jit_info.jit_settings = jit
+    end
     inputStream = @location.open_stream
     if @template
       @root = nil
@@ -238,6 +245,13 @@ class FxmlLoader
     @namespace[FXL::RESOURCES_KEY] = @resources
 
     @script_engine = nil
+
+    $DEBUG_IT_FXML_RB = jit_info.should_jit?
+    # if we have it cached, use the jitted method
+    if jit_info.compiled?
+      puts "jitting for #{@location.to_s}"
+      return jit_info.__build_via_jit(@controller)
+    end
 
     begin
       xmlInputFactory = XMLInputFactory.newFactory
@@ -285,8 +299,18 @@ class FxmlLoader
       @controller.instance_variable_set("@" + FXL::LOCATION_KEY, @location)
       @controller.instance_variable_set("@" + FXL::RESOURCES_KEY, @resources)
     end
-
-    puts rget @root
+    if $DEBUG_IT_FXML_RB
+      puts  "-"*50
+      puts "   #{@location.to_s}:"
+      code = rget @root
+      puts code
+      puts  "-"*50
+      jit_info.compile(code)
+    end
+    $RB_CMAPPER = {}
+    $RB_IDMAPPER = {}
+    $RB_MAPPER = {}
+    $RB_PREFIX = ""
 
     @xmlStreamReader = nil
     return @root
@@ -761,6 +785,7 @@ require_relative 'fxmlloader/value_elts'
 require_relative 'fxmlloader/real_elts'
 require_relative 'fxmlloader/rrba'
 require_relative 'fxmlloader/rorba'
+require_relative 'fxmlloader/fxml_jit_info'
 require_relative 'FXMLLoader-j8.jar'
 
 java_import 'org.jruby.jfx8.KeyPath'
