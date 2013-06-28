@@ -1,12 +1,13 @@
 class OBJFXBuilderWrapper < Java::java.util.AbstractMap
   include Java::javafx.util.Builder
-  def initialize(safeobj)
+  def initialize(safeobj, type)
     super()
+    @type = type
     @obj = safeobj
   end
 
   def wrapped_class
-    @obj.class
+    @type
   end
 
   def on_put(&on_put)
@@ -41,8 +42,12 @@ class OBJFXBuilderWrapper < Java::java.util.AbstractMap
     java.util.HashMap.new({}).entrySet
   end
 
+  def ==(rhs)
+    self.equal? rhs # do pointer comparison
+  end
+
   def inspect
-    "#<ObjectBuilderWrapper:#{__id__} child=#{@obj.class.inspect}>"
+    "#<ObjectBuilderWrapper:#{self.object_id.to_s 16} type=#{@type}, child=#{@obj.class.inspect}>"
   end
 end
 
@@ -106,34 +111,8 @@ class InstanceDeclarationElement < ValueElement
           value.size
         rescue java.lang.UnsupportedOperationException => ex
           dputs "########################## WARNING #############################3"
-          # value.class.__persistent__ = true # TODO: JRuby warning
-          if true
-            value = OBJFXBuilderWrapper.new(value)
-            value.on_put {|k, v| rctor value, k, v }
-          else
-            class << value
-              def size
-                dputs caller
-                dputs "size waz called!"
-                6
-              end
-              def [](x)
-                get(x)
-              end
-              def []=(x,y)
-                put(x,y)
-              end
-              def has_key?(x)
-                containsKey(x)
-              end
-              def to_s
-                "something interesting...."
-              end
-              def inspect
-                "something equally interesting...."
-              end
-            end
-          end
+          value = OBJFXBuilderWrapper.new(value, type)
+          value.on_put {|k, v| rctor value, k, v }
         end
       end
       if (value == nil)

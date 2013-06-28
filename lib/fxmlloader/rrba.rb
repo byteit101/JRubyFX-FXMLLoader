@@ -324,7 +324,7 @@ class RubyWrapperBeanAdapter
   def self.jit_export(co, value, ty)
     coi = co.inspect
     if co.is_a? Java::JavaLang::Enum
-      coi = "#{co.class.inspect}::#{co.to_s}"
+      coi = "Java::#{co.java_class.name.gsub(/[\$\.]/, "::")}::#{co.to_s}"
     elsif co.is_a? EventHandlerWrapper
       coi = "EventHandlerWrapper.new(__local_fxml_controller, #{co.funcName.inspect})"
     elsif rget(value)

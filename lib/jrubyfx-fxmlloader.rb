@@ -142,7 +142,7 @@ def rputs(elt, args)
 end
 
 def rmorph(old, new)
-  $RB_MAPPER[new] = "build(FxmlBuilderBuilder, #{$RB_CMAPPER[old].inspect}, #{old.wrapped_class}) do\n"
+  $RB_MAPPER[new] = "build(FxmlBuilderBuilder, #{($RB_CMAPPER[old]||{}).inspect}, #{old.wrapped_class.ruby_class.inspect}) do\n"
 end
 
 def rctor(elt, k, v)
@@ -158,8 +158,9 @@ def rget(elt)
 end
 
 class FxmlBuilderBuilder # the builder builder (builds builders)
-  def self.new(arg_map, builder_class)
-    builder = builder_class.new
+  @@bf = Java::javafx.fxml.JavaFXBuilderFactory.new
+  def self.new(arg_map, builder_type)
+    builder = @@bf.getBuilder(builder_type)
     arg_map.each do |k, v|
       builder.put(k, v) # DON't use []= or we have to wrap it
     end
