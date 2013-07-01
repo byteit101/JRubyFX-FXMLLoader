@@ -729,6 +729,7 @@ class DefineElement < Element
   end
 
   def add(element)
+    rputs parent.value, rget(element)
     # No-op
   end
 
