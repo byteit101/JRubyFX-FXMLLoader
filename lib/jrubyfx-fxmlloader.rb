@@ -333,7 +333,7 @@ class FxmlLoader
     if jit_info.compiled?
       begin
         return jit_info.__build_via_jit(@controller, @namespace)
-      rescue Error, java.lang.Throwable
+      rescue Exception, java.lang.Throwable
         puts "JIT compiled method for #{@location.to_s} FAILED with error:"
         puts $!
         puts $!.backtrace

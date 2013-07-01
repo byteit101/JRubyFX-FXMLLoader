@@ -63,4 +63,5 @@ class FxmlJitInfo
 METHOD_DEF
     @jitted = true
   end
+  Infinity = 1.0/0.0
 end
