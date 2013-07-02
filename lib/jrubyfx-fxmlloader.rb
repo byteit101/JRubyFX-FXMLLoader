@@ -310,8 +310,10 @@ class FxmlLoader
   end
 
   # either :no_jit, or a number above 0 representing the number of times before jitting a fxml file
-  def load(jit=0)
+  def load(jruby_exts = {jruby_ext: {}})
     dp "This is the namespace", @namespace
+    @jruby_ext = {jit: 0}.merge(jruby_exts[:jruby_ext])
+    jit = @jruby_ext[:jit]
     # TODO: actually open it properly
     unless jit_info = @@fxml_jit_info[file_path = @location.to_s]
       jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, jit)
@@ -470,6 +472,7 @@ class FxmlLoader
 		# Set the root value
 		unless @root
 			@root = @current.value;
+      @jruby_ext[:on_root_set].call(@root) if @jruby_ext[:on_root_set]
     end
   end
 
