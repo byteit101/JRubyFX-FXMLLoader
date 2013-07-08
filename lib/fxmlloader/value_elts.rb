@@ -153,8 +153,13 @@ dputs "parentS>AS"
       # checking the version JavaFX API - print warning if not supported
       defaultNSURI = xmlStreamReader.getNamespaceContext().getNamespaceURI("");
       if (defaultNSURI != nil)
-        nsVersion = defaultNSURI[(defaultNSURI.lastIndexOf("/") + 1)..-1]
-        if (parentLoader.compareJFXVersions(FXL::JAVAFX_VERSION, nsVersion) < 0)
+        nsVersion = defaultNSURI[(defaultNSURI.rindex("/") + 1)..-1]
+        jfx_version = if defined? FXL::JAVAFX_VERSION
+          FXL::JAVAFX_VERSION
+        else
+          "http://javafx.com/javafx/2.2"
+        end
+        if (parentLoader.compareJFXVersions(jfx_version, nsVersion) < 0)
           Logging.getJavaFXLogger().warning("Loading FXML document with JavaFX API of version " + nsVersion + " by JavaFX runtime of version " + FXL::JAVAFX_VERSION);
         end
       end
