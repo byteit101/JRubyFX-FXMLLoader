@@ -313,10 +313,9 @@ class FxmlLoader
   def load(jruby_exts = {jruby_ext: {}})
     dp "This is the namespace", @namespace
     @jruby_ext = {jit: 0}.merge(jruby_exts[:jruby_ext])
-    jit = @jruby_ext[:jit]
     # TODO: actually open it properly
     unless jit_info = @@fxml_jit_info[file_path = @location.to_s]
-      jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, jit)
+      jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, @jruby_ext[:jit], @jruby_ext[:jit_opts])
     end
     inputStream = @location.open_stream
     if @template

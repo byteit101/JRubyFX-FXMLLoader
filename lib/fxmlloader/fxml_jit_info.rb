@@ -31,10 +31,11 @@ class FxmlJitInfo
   end
   # TODO: store jit settings in here instead of $RB_* variables
   attr_accessor :file_name, :raw_code, :jit_settings
-  def initialize(file_name, jit_settings=1)
+  def initialize(file_name, jit_settings=1, opts = nil)
     @file_name = file_name
     @jit_settings = jit_settings
     @run_count = 0
+    @opts = opts
   end
   def hash
     FxmlJitInfo.hash(@file_name)
@@ -52,7 +53,7 @@ class FxmlJitInfo
   def compile(code=@raw_code)
     @raw_code = code
     # TODO: begin rescue end
-    self.instance_eval <<METHOD_DEF
+    full_code =  <<METHOD_DEF
     def __build_via_jit(__local_fxml_controller, __local_namespace)
       __local_fx_id_setter = lambda do |name, __i|
         __local_namespace[name] = __i
@@ -61,6 +62,11 @@ class FxmlJitInfo
 #{code}
     end
 METHOD_DEF
+    ;#)
+    if @opts && @opts[:compile_hook]
+      @opts[:compile_hook].call(full_code)
+    end
+    self.instance_eval full_code
     @jitted = true
   end
   Infinity = 1.0/0.0
