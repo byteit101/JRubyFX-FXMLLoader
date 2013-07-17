@@ -32,10 +32,8 @@
 # * corresponding property model.
 # */
 class RubyWrapperBeanAdapter
-  #  private final Object @bean;
 
-
-  @@globalMethodCache = {}
+  @@method_cache = {}
 
   GET_PREFIX = "get"
   IS_PREFIX = "is"
@@ -44,184 +42,110 @@ class RubyWrapperBeanAdapter
 
   VALUE_OF_METHOD_NAME = "valueOf"
 
-  #    static
-  #        contextClassLoader = Thread.currentThread().getContextClassLoader();
-  #
-  #        if (contextClassLoader == nil)
-  #            raise ArgumentError.new();
-  #        end
-  #    end
+  OBJECT_PUBLIC_METHODS = Object.new.public_methods
 
-  #Creates a Bean.new adapter.
-  #
   #@param @bean
   #The Bean object to wrap.
   def initialize(bean)
-    @bean = bean;
-
+    @bean = bean
     type = @bean.java_class
-
-    while (type != Java.java.lang.Object.java_class && !@@globalMethodCache.has_key?(type))
-      @@globalMethodCache[type] = getClassMethodCache(type)
-      type = type.superclass();
+    while type != java.lang.Object.java_class && !@@method_cache.has_key?(type)
+      build_cache_for type
+      type = type.superclass
     end
   end
 
-  def getClassMethodCache(type)
-    classMethodCache = {}
+  def build_cache_for(type)
+    class_methods = {}
 
-    ReflectUtil.checkPackageAccess(type);
-    declaredMethods = type.declared_instance_methods();
-    declaredMethods.each do |method|
-      modifiers = method.modifiers();
+    ReflectUtil.checkPackageAccess(type) # TODO: do I want this ?
 
-      if (Modifier.public?(modifiers) && !Modifier.static?(modifiers))
-        name = method.name();
-        namedMethods = classMethodCache[name]
-
-        if (namedMethods == nil)
-          namedMethods = []
-          classMethodCache[name] =  namedMethods
-        end
-
-        namedMethods << (method)
+    java_methods = type.declared_instance_methods.each do |method|
+      modifiers = method.modifiers
+      if Modifier.public?(modifiers) && !Modifier.static?(modifiers)
+        name = method.name
+        unless class_methods.has_key? name
+          class_methods[name] = []
+        else
+          class_methods[name]
+        end << method
       end
     end
+    #    (@bean.public_methods - OBJECT_PUBLIC_METHODS - java_methods.map{|x|x.name.to_sym}).each do |method_name|
+    #      name = method_name.to_s
+    #      unless class_methods.has_key? name
+    #        class_methods[name] = []
+    #      else
+    #        class_methods[name]
+    #      end << @bean.method(method_name)
+    #    end
 
-    return classMethodCache;
+    @@method_cache[type] = class_methods
   end
 
-  #    /**
-  #     * Returns the Bean object this adapter wraps.
-  #     *
-  #     * @return
-  #     * The Bean object, or <tt>nil</tt> if no Bean has been set.
-  #     */
-  def getBean()
-    return @bean;
-  end
-
-  def getMethod(name, *parameterTypes)
-    type = @bean.java_class();
-
-    method = nil;
-    while (type != Java::java.lang.Object.java_class)
-      classMethodCache = @@globalMethodCache[(type)] || {}
-
-      namedMethods = classMethodCache[name]
-      if (namedMethods != nil)
-        for  namedMethod in namedMethods
-          if (namedMethod.name() == (name)  && namedMethod.parameter_types() ==  parameterTypes)
-            method = namedMethod;
-            break;
-          end
+  def getMethod(name, *parameter_types)
+    type = @bean.java_class
+    while type != java.lang.Object.java_class
+      if methods = (@@method_cache[type] || {})[name]
+        methods.each do |method|
+          return method if method.name == name && method.parameter_types == parameter_types
         end
       end
-
-      if (method != nil)
-        break;
-      end
-      type = type.superclass();
+      type = type.superclass
     end
-
-    return method;
+    return nil
   end
 
-  def getGetterMethod( key)
-    getterMethod = getMethod(getMethodName(GET_PREFIX, key));
-
-    if (getterMethod == nil)
-      getterMethod = getMethod(getMethodName(IS_PREFIX, key));
-    end
-
-    return getterMethod;
+  def getter(key)
+    capital = camelize(key)
+    return getMethod(GET_PREFIX + capital) if @bean.respond_to?(GET_PREFIX + capital)
+    return getMethod(IS_PREFIX + capital)
   end
 
-  def getSetterMethod( key)
-    type = getType(key);
-
-    if (type == nil)
-      raise UnsupportedOperationException.new("Cannot determine type for property.");
-    end
-
-    return getMethod(getMethodName(SET_PREFIX, key), type)
+  def setter(key)
+    raise UnsupportedOperationException.new("Cannot determine type for property.") unless type = getType(key)
+    return getMethod(method_name(SET_PREFIX, key), type)
   end
 
-  def getMethodName(prefix, key)
-    return prefix + key[0].upcase + key[1..-1];
+  def method_name(prefix, key)
+    return prefix + camelize(key)
+  end
+
+  def camelize(key)
+    key[0].upcase + key[1..-1]
   end
 
   def [](key)
     key = key.to_s
-    getterMethod = key.end_with?(PROPERTY_SUFFIX) ? getMethod(key) : getGetterMethod(key);
-
-    value = nil
-    if (getterMethod != nil)
-      begin
-        value = getterMethod.invoke @bean
-      rescue IllegalAccessException => exception
-        raise RuntimeException.new(exception);
-      rescue InvocationTargetException => exception
-        raise RuntimeException.new(exception);
+    begin
+      unless key.end_with?(PROPERTY_SUFFIX)
+        camel = camelize(key)
+        unless !@bean.respond_to?(GET_PREFIX + camel) and @bean.respond_to?(IS_PREFIX + camel)
+          @bean.send(GET_PREFIX + camel)
+        else
+          @bean.send(IS_PREFIX + camel)
+        end
+      else
+        @bean.send key
       end
-    else
-      value = nil;
+    rescue NoMethodError => nme
+      raise unless nme.name.to_s.end_with?(key)
+      nil
     end
-
-    return value;
   end
 
-  #    /**
-  #     * Invokes a setter method for the given property. The
-  #     * {@link #coerce(Object, Class)end method is used as needed to attempt to
-  #     * convert a given value to the property type, as defined by the return
-  #     * value of the getter method.
-  #     *
-  #     * @param key
-  #     * The property name.
-  #     *
-  #     * @param value
-  #     * The property.new value.
-  #     *
-  #     * @return
-  #     * Returns <tt>nil</tt>, since returning the previous value would require
-  #     * an unnecessary call to the getter method.
-  #     *
-  #     * @throws PropertyNotFoundException
-  #     * If the given property does not exist or is read-only.
-  #     */
-  #    @Override
   def []=(key, value)
-    dputs "calling setter"
-    if (key == nil)
-      raise "NULL PTR"
-    end
+    raise "NULL PTR" unless key
 
-    setterMethod = getSetterMethod(key);
+    setter = method_name(SET_PREFIX, key)
 
-    if (setterMethod == nil)
-      dputs caller
-      dputs "error in []=!"
-      dp key, value, @bean
-      raise ("Property \"" + key + "\" does not exist"                + " or is read-only.");
-    end
-    begin
-      ty = getType(key)
-      co = coerce(value, ty)
-      coi = RubyWrapperBeanAdapter.jit_export(co, value, ty, setterMethod, setterMethod.name)
-      rputs @bean, "#{setterMethod.name}(#{coi})"
-      setterMethod.invoke(@bean, co );
-    rescue IllegalAccessException => exception
-      dp "issues1"
-      dp exception
-      raise "RuntimeException.new(exception);"
-    rescue InvocationTargetException => exception
-      dp "issues2"
-      dp exception
-      raise R"untimeException.new(exception);"
-    end
-    dputs "eone"
-    return nil;
+    raise "Property \"#{key}\" does not exist or is read-only." unless @bean.respond_to? setter
+    ty = getType(key)
+    co = coerce(value, ty)
+    coi = RubyWrapperBeanAdapter.jit_export(co, value, ty, setter(key))
+    rputs @bean, "#{setter}(#{coi})"
+    @bean.send(setter, co)
+    co
   end
 
   #    /**
@@ -246,22 +170,8 @@ class RubyWrapperBeanAdapter
     raise UnsupportedOperationException.new();
   end
 
-  #    /**
-  #     * Tests the mutability of a property.
-  #     *
-  #     * @param key
-  #     * The property name.
-  #     *
-  #     * @return
-  #     * <tt>true</tt> if the property is read-only; <tt>false</tt>, otherwise.
-  #     */
   def read_only?(key)
-    if (key == nil)
-      raise "NULL PTR"
-    end
-    dputs "checking for readonly-ness of #{key}:"
-    dp getSetterMethod(key)
-    return getSetterMethod(key) == nil;
+    setter(key) == nil
   end
 
   #    /**
@@ -282,20 +192,10 @@ class RubyWrapperBeanAdapter
     return self[key + PROPERTY_SUFFIX]
   end
 
-  #    /**
-  #     * Returns the type of a property.
-  #     *
-  #     * @param key
-  #     * The property name.
-  #     */
   def getType(key)
-    if (key == nil)
-      raise ArgumentError.new();
-    end
-
-    getterMethod = getGetterMethod(key);
-
-    return (getterMethod == nil) ? nil : getterMethod.return_type();
+    raise ArgumentError.new unless key
+    getter = getter(key)
+    getter && getter.return_type
   end
 
   #    /**
@@ -309,7 +209,7 @@ class RubyWrapperBeanAdapter
       raise ArgumentError.new();
     end
 
-    getterMethod = getGetterMethod(key);
+    getterMethod = getter(key);
     dputs "GOt getter method for #{key}"
     dp getterMethod
     dputs getterMethod
@@ -321,7 +221,7 @@ class RubyWrapperBeanAdapter
     RubyWrapperBeanAdapter.coerce(value, type)
   end
 
-  def self.jit_export(co, value, ty, setter, setting)
+  def self.jit_export(co, value, ty, setter, ignore=nil)
     coi = co.inspect
     if co.is_a? Java::JavaLang::Enum
       coi = "Java::#{co.java_class.name.gsub(/[\$\.]/, "::")}::#{co.to_s}"
@@ -336,10 +236,10 @@ class RubyWrapperBeanAdapter
     elsif setter.respond_to? :varargs? and setter.varargs?
       coi = "*#{coi}"
     elsif coi.start_with? "#<"
-#      puts "ignoring #{setting}(#{coi})
-#        How about #{setting}(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?#
+      #      puts "ignoring #{setting}(#{coi})
+      #        How about #{setting}(RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty})) ?#
 
-#      "
+      #      "
       coi = "RubyWrapperBeanAdapter.coerce(#{value.inspect}, #{ty.ruby_class}.java_class)"
     end
     return coi
@@ -638,7 +538,7 @@ class RubyWrapperBeanAdapter
 
     # Invoke the setter
     begin
-      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{jit_export(value, value, targetType, setterMethod, "#{sourceType.ruby_class.inspect}.#{key}=")})"
+      rputs target, "#{sourceType.ruby_class.inspect}.set#{key[0].upcase}#{key[1..-1]}(self, #{jit_export(value, value, targetType, key, "#{sourceType.ruby_class.inspect}.#{key}=")})"
       getStaticSetterMethod(sourceType, key, valueClass, targetType, true).call(target.java_object, value);
     rescue InvocationTargetException => exception
       raise "RuntimeException.new(exception);"
