@@ -49,10 +49,22 @@ class RubyWrapperBeanAdapter
   def initialize(bean)
     @bean = bean
     type = @bean.java_class
+    javas = []
     while type != java.lang.Object.java_class && !@@method_cache.has_key?(type)
-      build_cache_for type
+      javas += build_cache_for(type)
       type = type.superclass
     end
+#    class_methods = {}
+#    (@bean.public_methods - OBJECT_PUBLIC_METHODS - javas.map{|x|x.name.to_sym}).each do |method_name|
+#      puts "ruby method: #{method_name}"
+#      name = method_name.to_s
+#      unless class_methods.has_key? name
+#        class_methods[name] = []
+#      else
+#        class_methods[name]
+#      end << method_name.to_sym
+#    end
+#    @@method_cache[@bean.class] =
   end
 
   def build_cache_for(type)
@@ -71,16 +83,9 @@ class RubyWrapperBeanAdapter
         end << method
       end
     end
-    #    (@bean.public_methods - OBJECT_PUBLIC_METHODS - java_methods.map{|x|x.name.to_sym}).each do |method_name|
-    #      name = method_name.to_s
-    #      unless class_methods.has_key? name
-    #        class_methods[name] = []
-    #      else
-    #        class_methods[name]
-    #      end << @bean.method(method_name)
-    #    end
 
     @@method_cache[type] = class_methods
+    return java_methods
   end
 
   def getMethod(name, *parameter_types)
@@ -130,6 +135,10 @@ class RubyWrapperBeanAdapter
       end
     rescue NoMethodError => nme
       raise unless nme.name.to_s.end_with?(key)
+      puts "failing on #{key}"
+      p @bean
+      p @bean.class
+      puts caller
       nil
     end
   end
@@ -148,74 +157,31 @@ class RubyWrapperBeanAdapter
     co
   end
 
-  #    /**
-  #     * Verifies the existence of a property.
-  #     *
-  #     * @param key
-  #     * The property name.
-  #     *
-  #     * @return
-  #     * <tt>true</tt> if the property exists; <tt>false</tt>, otherwise.
-  #     */
-  #    @Override
-  def has_key?( key)
-    if (key == nil)
-      raise "NULL PTR"
-    end
-
-    return getType(key.to_s) != nil;
-  end
-
-  def entrySet()
-    raise UnsupportedOperationException.new();
+  def has_key?(key)
+    raise "NULL PTR" unless key
+    getType(key.to_s)
   end
 
   def read_only?(key)
     setter(key) == nil
   end
 
-  #    /**
-  #     * Returns the property model for the given property.
-  #     *
-  #     * @param key
-  #     * The property name.
-  #     *
-  #     * @return
-  #     * The named property model, or <tt>nil</tt> if no such property exists.
-  #     */
-  #    @SuppressWarnings("unchecked")
-  def getPropertyModel( key)
-    if (key == nil)
-      raise ArgumentError.new();
-    end
-
-    return self[key + PROPERTY_SUFFIX]
+  def getPropertyModel(key)
+    raise ArgumentError.new unless key
+    self[key + PROPERTY_SUFFIX]
   end
 
   def getType(key)
     raise ArgumentError.new unless key
-    getter = getter(key)
-    getter && getter.return_type
-  end
-
-  #    /**
-  #     * Returns the generic type of a property.
-  #     *
-  #     * @param key
-  #     * The property name.
-  #     */
-  def getGenericType(key)
-    if (key == nil)
-      raise ArgumentError.new();
+    if @bean.respond_to? "#{key}GetType" # ruby type support ;-D
+      @bean.send("#{key}GetType")
+    else
+      getter = getter(key)
+      getter && getter.return_type
     end
-
-    getterMethod = getter(key);
-    dputs "GOt getter method for #{key}"
-    dp getterMethod
-    dputs getterMethod
-
-    return (getterMethod == nil) ? nil : getterMethod.return_type
   end
+
+  alias :getGenericType :getType
 
   def coerce(value, type)
     RubyWrapperBeanAdapter.coerce(value, type)
@@ -244,16 +210,7 @@ class RubyWrapperBeanAdapter
     end
     return coi
   end
-  #    /**
-  #     * Coerces a value to a given type.
-  #     *
-  #     * @param value
-  #     * @param type
-  #     *
-  #     * @return
-  #     * The coerced value.
-  #     */
-  #    @SuppressWarnings("unchecked")
+
   def self.coerce( value,  type)
     dputs "coercing..."
     if (type == nil)
