@@ -54,17 +54,17 @@ class RubyWrapperBeanAdapter
       javas += build_cache_for(type)
       type = type.superclass
     end
-#    class_methods = {}
-#    (@bean.public_methods - OBJECT_PUBLIC_METHODS - javas.map{|x|x.name.to_sym}).each do |method_name|
-#      puts "ruby method: #{method_name}"
-#      name = method_name.to_s
-#      unless class_methods.has_key? name
-#        class_methods[name] = []
-#      else
-#        class_methods[name]
-#      end << method_name.to_sym
-#    end
-#    @@method_cache[@bean.class] =
+    #    class_methods = {}
+    #    (@bean.public_methods - OBJECT_PUBLIC_METHODS - javas.map{|x|x.name.to_sym}).each do |method_name|
+    #      puts "ruby method: #{method_name}"
+    #      name = method_name.to_s
+    #      unless class_methods.has_key? name
+    #        class_methods[name] = []
+    #      else
+    #        class_methods[name]
+    #      end << method_name.to_sym
+    #    end
+    #    @@method_cache[@bean.class] =
   end
 
   def build_cache_for(type)
@@ -153,7 +153,11 @@ class RubyWrapperBeanAdapter
     co = coerce(value, ty)
     coi = RubyWrapperBeanAdapter.jit_export(co, value, ty, setter(key))
     rputs @bean, "#{setter}(#{coi})"
-    @bean.send(setter, co)
+    if coi.start_with?("*[") # cheap way to not compute it twice :D
+      @bean.send(setter, *co)
+    else
+      @bean.send(setter, co)
+    end
     co
   end
 
