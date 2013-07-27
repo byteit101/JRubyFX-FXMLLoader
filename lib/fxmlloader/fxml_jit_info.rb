@@ -50,7 +50,6 @@ class FxmlJitInfo
     if @file_name.start_with? "file:"
       @file_name = @file_name.gsub(/^file\:/, '')
     elsif @file_name.start_with? "jar:"
-      @file_name = @file_name.gsub(/^jar:file\:/, '')
       @no_write = true
     end
     @jit_settings = jit_settings
