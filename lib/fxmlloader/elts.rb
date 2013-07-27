@@ -53,7 +53,7 @@ class Element
     return collection;
   end
 
-  def add(element, prop_name=nil)
+  def add(element, prop_name=nil, rputs_elt=nil)
     dputs callz + "about to add #{element} to #{value.to_java}"
     # If value is a list, add element to it; otherwise, get the value
     # of the default property, which is assumed to be a list and add
@@ -62,7 +62,7 @@ class Element
       if prop_name == nil
         rputs value, "add(#{rget(element)||element.inspect})"
       else
-        rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rget(element)||element.inspect})"
+        rputs @parent.value, "get#{prop_name[0].upcase}#{prop_name[1..-1]}.add(#{rputs_elt || rget(element)||element.inspect})"
       end
       value.to_java
     else
@@ -337,7 +337,11 @@ class Element
         return aValue;
       else
         begin
-          return (aValue[0] == '/') ? classLoader.getResource(aValue[1..-1]).to_s : URL.new(parentLoader.location, aValue).to_s
+          if $JRUBYFX_AOT_COMPILING
+            return RelativeFXMLString.new(aValue, URL.new(parentLoader.location, aValue).to_s)
+          else
+            return (aValue[0] == '/') ? classLoader.getResource(aValue[1..-1]).to_s : URL.new(parentLoader.location, aValue).to_s
+          end
         rescue MalformedURLException => e
           dp e
           dputs "#{parentLoader.location} + /+ #{aValue}"
@@ -590,5 +594,22 @@ class ScriptEventHandler
 
     # Restore the original bindings
     @scriptEngine.setBindings(engineBindings, ScriptContext::ENGINE_SCOPE);
+  end
+end
+
+class RelativeFXMLString < String
+  alias :super_inspect :inspect
+  def initialize(str, rel)
+    super(rel)
+    @rel = str
+  end
+  def inspect
+    "java.net.URL.new(__local_namespace['location'], #{@rel.inspect}).to_s"
+  end
+  def to_s
+    super
+  end
+  def class()
+    String
   end
 end

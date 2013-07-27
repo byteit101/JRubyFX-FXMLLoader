@@ -426,7 +426,12 @@ class RootElement < ValueElement
     value=nil
     root = parentLoader.root
     if (root == nil)
-      raise LoadException.new("Root hasn't been set. Use method setRoot() before load.");
+      if $JRUBYFX_AOT_COMPILING
+        root = parentLoader.root = type.ruby_class.new
+        value = root
+      else
+        raise LoadException.new("Root hasn't been set. Use method setRoot() before load.");
+      end
     else
       if (!type.isAssignableFrom(root.java_class()))
         raise LoadException.new("Root is not an instance of "										+ type.getName() + ".");
@@ -503,13 +508,12 @@ class PropertyElement < Element
   end
 
   def add( element)
+    @pushd = true
     dputs ( callz) +"Adding #{element} to ===> #{name}"
     dprint callz
     dp element
     dp element.class
-    if element.class.inspect == "Java::JavaNet::URL"
-      # element = element.java_object
-    end
+    rp = nil
     # Coerce the element to the list item type
     if (parent.isTyped())
       listType = parent.getValueAdapter().getGenericType(name);
@@ -518,16 +522,17 @@ class PropertyElement < Element
       # FIXME: HACK!
       if element.class.inspect == "Java::JavaNet::URL"
         lit = Java::java.lang.String.java_class
+        rp = rget(element).match(/build\(FxmlBuilderBuilder, \{"value"=>(.*)\}, Java::JavaNet::URL\) do\n( )*end/)[1]
       end
-
       element = RubyWrapperBeanAdapter.coerce(element, lit);
     end
 
     # Add the item to the list
-    super(element, name);
+    super(element, name, rp);
   end
 
   def set( value)
+    @pushd = true
     dputs (callz) +"setting prope value #{name} ==> #{value}"
     # Update the value
     updateValue(value);
@@ -561,6 +566,9 @@ class PropertyElement < Element
     if (readOnly)
       processInstancePropertyAttributes();
       processEventHandlerAttributes();
+      unless @pushd
+        rputs parent.value, "with(get#{@name[0].upcase}#{@name[1..-1]}) do\n#{rget(@value)||@value.inspect}\nend"
+      end
     end
   end
 

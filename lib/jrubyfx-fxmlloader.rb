@@ -315,7 +315,9 @@ class FxmlLoader
     @jruby_ext = {jit: 0}.merge(jruby_exts[:jruby_ext])
     # TODO: actually open it properly
     unless jit_info = @@fxml_jit_info[file_path = @location.to_s]
-      jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, @jruby_ext[:jit], @jruby_ext[:jit_opts])
+      validate = true
+      validate = @jruby_ext[:jit_validate] if @jruby_ext.has_key? :jit_validate
+      jit_info = @@fxml_jit_info[file_path] = FxmlJitInfo.new(file_path, @jruby_ext[:jit], @jruby_ext[:jit_save_to], @jruby_ext[:jit_cache], validate, @jruby_ext[:jit_opts])
     end
     inputStream = @location.open_stream
     if @template
@@ -333,6 +335,7 @@ class FxmlLoader
     # if we have it cached, use the jitted method
     if jit_info.compiled?
       begin
+        return :dont_load if @jruby_ext[:dont_load]
         return jit_info.__build_via_jit(@controller, @namespace)
       rescue Exception, java.lang.Throwable
         puts "JIT compiled method for #{@location.to_s} FAILED with error:"
