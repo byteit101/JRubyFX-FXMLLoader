@@ -567,7 +567,7 @@ class PropertyElement < Element
       processInstancePropertyAttributes();
       processEventHandlerAttributes();
       unless @pushd
-        rputs parent.value, "with(get#{@name[0].upcase}#{@name[1..-1]}) do\n#{rget(@value)||@value.inspect}\nend"
+        rputs parent.value, "with(get#{@name[0].upcase}#{@name[1..-1]}) do\n#{rget(@value)||@value.inspect}\nend" unless parent.value == @value
       end
     end
   end
