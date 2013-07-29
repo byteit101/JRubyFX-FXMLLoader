@@ -83,14 +83,14 @@ class FxmlJitInfo
   def decompile
     @compiled = nil
   end
-  def __build_via_jit(__local_fxml_controller, __local_namespace)
-    @compiled.__build_via_jit(__local_fxml_controller, __local_namespace)
+  def __build_via_jit(__local_fxml_controller, __local_namespace, __local_jruby_ext)
+    @compiled.__build_via_jit(__local_fxml_controller, __local_namespace, __local_jruby_ext)
   end
   def compile(code=@raw_code)
     @raw_code = code
     # TODO: begin rescue end
     full_code =  <<METHOD_DEF
-    def __build_via_jit(__local_fxml_controller, __local_namespace)
+    def __build_via_jit(__local_fxml_controller, __local_namespace, __local_jruby_ext)
       __local_fx_id_setter = lambda do |name, __i|
         __local_namespace[name] = __i
         __local_fxml_controller.instance_variable_set(("@\#{name}").to_sym, __i)

@@ -336,7 +336,7 @@ class FxmlLoader
     if jit_info.compiled?
       begin
         return :dont_load if @jruby_ext[:dont_load]
-        return jit_info.__build_via_jit(@controller, @namespace)
+        return jit_info.__build_via_jit(@controller, @namespace, @jruby_ext)
       rescue Exception, java.lang.Throwable
         puts "JIT compiled method for #{@location.to_s} FAILED with error:"
         puts $!
@@ -474,6 +474,7 @@ class FxmlLoader
 		# Set the root value
 		unless @root
 			@root = @current.value;
+      rputs @root, "__local_jruby_ext[:on_root_set].call(self) if __local_jruby_ext[:on_root_set]"
       @jruby_ext[:on_root_set].call(@root) if @jruby_ext[:on_root_set]
     end
   end
