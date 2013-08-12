@@ -74,7 +74,7 @@ class Element
       list =  getProperties[defaultPropertyName]
 
       # Coerce the element to the list item type
-      if (!Map.java_class.assignable_from?(type))
+      if (!java.util.Map.java_class.assignable_from?(type))
         listType = @valueAdapter.getGenericType(defaultPropertyName);
         element = RubyWrapperBeanAdapter.coerce(element, RubyWrapperBeanAdapter.getListItemType(listType));
       end

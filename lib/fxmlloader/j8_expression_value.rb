@@ -54,7 +54,7 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
     @type = type;
 
     arguments = expression.getArguments();
-    @argumentMonitors = ArrayList.new(arguments.size());
+    @argumentMonitors = java.util.ArrayList.new(arguments.size());
 
     for  argument in arguments
       @argumentMonitors.add(KeyPathMonitor.new(self, argument.iterator()));

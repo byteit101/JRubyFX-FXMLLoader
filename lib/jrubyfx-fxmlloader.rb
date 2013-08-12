@@ -33,11 +33,6 @@ rescue  LoadError, NameError
   exit -2
 end
 
-#java_import 'javax.xml.stream.util.StreamReaderDelegate'
-#java_import 'javax.xml.stream.XMLStreamException', 'javax.xml.stream.XMLInputFactory',
-#  'java.io.InputStreamReader', 'javax.xml.stream.XMLStreamConstants'
-java_import 'java.net.URL', 'java.nio.charset.Charset', 'java.lang.ClassNotFoundException'
-#java_import 'javafx.fxml.LoadException'
 java_import 'javafx.fxml.JavaFXBuilderFactory'
 java_import 'java.lang.InstantiationException', 'java.lang.IllegalAccessException'
 
@@ -45,23 +40,15 @@ java_import *%w[com.sun.javafx.Logging
 java.io.IOException
 java.io.InputStream
 java.io.InputStreamReader
-java.lang.reflect.Constructor
+java.lang.ClassNotFoundException
 java.lang.reflect.InvocationTargetException
 java.lang.reflect.Modifier
 java.lang.reflect.ParameterizedType
-java.lang.reflect.Type
 java.net.URL
 java.nio.charset.Charset
 java.util.AbstractMap
-java.util.ArrayList
-java.util.Collections
-java.util.HashMap
-java.util.LinkedList
 java.util.List
-java.util.Map
 java.util.ResourceBundle
-java.util.Set
-java.util.regex.Pattern
 
 javafx.beans.DefaultProperty
 javafx.beans.property.Property
