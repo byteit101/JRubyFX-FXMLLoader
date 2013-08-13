@@ -66,7 +66,7 @@ class FxmlJitInfo
     if File.exist?(@outfile) && !(opts && opts[:force])
       @compiled = self.class.load_aot(@file_name, @outfile, validate)
       if @compiled
-        puts "got #{file_name} from cache"
+        dputs "got #{file_name} from cache"
       end
     end
   end
@@ -116,7 +116,7 @@ METHOD_DEF
   end
 
   def jit_no_cache(full_code)
-    puts "JIT only, no aot for #{@file_name}"
+    dputs "JIT only, no aot for #{@file_name}"
     self.instance_eval full_code
     @compiled = true
   end

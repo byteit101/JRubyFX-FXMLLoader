@@ -45,7 +45,7 @@ task :gem => :jar
 
 spec = Gem::Specification.new do |s|
   s.name = 'jrubyfx-fxmlloader'
-  s.version = '0.2'
+  s.version = '0.3'
   s.platform    = 'java'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README', 'LICENSE']
