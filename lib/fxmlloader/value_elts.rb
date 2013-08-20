@@ -43,8 +43,6 @@ class StupidFixTODOInsets < Java::javafx::geometry::InsetsBuilder
   end
 
   def size
-    dputs "GAAAAAAAAAAAAAA!!!!!"
-    dputs caller
     990
   end
   def to_s
@@ -71,32 +69,22 @@ class ValueElement < Element
   end
 
   def processEndElement()
-    dputs callz + "process end super?"
     super
-    dputs callz + "process end superd!"
-    dp value
 
     # Build the value, if necessary
     if (value.is_a? Builder)
-      dputs "build it"
       updateValue(value.build());
-dputs "process it"
       processValue();
     else
       processInstancePropertyAttributes();
     end
-dputs "donet"
     processEventHandlerAttributes();
-dputs "ahndersAtrrs"
     # Process static property attributes
     if (staticPropertyAttributes.length > 0)
       for attribute in staticPropertyAttributes
-        dputs "process prodp attr-----------"
-        dp attribute
         processPropertyAttribute(attribute);
       end
     end
-dputs "staticpro"
     # Process static property elements
     if (staticPropertyElements.length > 0)
       for  element in staticPropertyElements
@@ -106,12 +94,10 @@ dputs "staticpro"
 
     rnest -1
     rputs value, ((rfx_id(value) && rfx_id_set?(value)) || rno_show?(value) ? ""  : "end")
-dputs "parentS>AS"
     if (parent != nil)
       if (parent.isCollection())
         parent.add(value);
       else
-        dputs callz + " ANd setting  #{value} on #{parent}"
         parent.set value
       end
     end
@@ -177,18 +163,15 @@ dputs "parentS>AS"
         # set fx:id property value to Node.id only if Node.id was not
         # already set when processing start element attributes
         if (properties[idProperty.value] == nil)
-          dputs callz + "saving ID property #{idProperty.value}"
           properties[idProperty.value()]= @fx_id;
         end
       end
-      dputs callz+ "About to set instance variable #{@fx_id}"
       rputs value, "__local_fx_id_setter.call(#{@fx_id.inspect}, self)"
       rfx_id value, @fx_id
       # Set the controller field value
       if (parentLoader.controller != nil)
         field = parentLoader.controller.instance_variable_set("@" + @fx_id, value)
       end
-      dputs callz + "Set.."
     end
   end
 
@@ -208,7 +191,6 @@ dputs "parentS>AS"
 
       if (valueAdapter.read_only?(defaultPropertyName) && List.class.isAssignableFrom(valueAdapter.getType(defaultPropertyName)))
         list = valueAdapter.get(defaultPropertyName);
-        puts "pchars add!!!!"
         list.add(getListValue(self, defaultPropertyName, text));
       else
         valueAdapter.put(defaultPropertyName, text.strip);
@@ -232,7 +214,6 @@ dputs "parentS>AS"
 #            raise LoadException.new("Invalid identifier.");
 #          end
 #        end
-dputs callz + "Found FXID is #{value}"
         @fx_id = value;
 
       elsif (localName == (FXL::FX_CONTROLLER_ATTRIBUTE))
@@ -240,7 +221,6 @@ dputs callz + "Found FXID is #{value}"
           raise LoadException.new(FXL::FX_NAMESPACE_PREFIX + ":" + FXL::FX_CONTROLLER_ATTRIBUTE		+ " can only be applied to root element.");
         end
 
-dputs callz + "Found controller attrib is #{value} (#{parentLoader.controller}, #{staticLoad})"
         if (parentLoader.controller != nil)
           raise LoadException.new("Controller value already specified.");
         end
@@ -270,7 +250,6 @@ dputs callz + "Found controller attrib is #{value} (#{parentLoader.controller}, 
         raise LoadException.new("Invalid attribute.");
       end
     else
-      dputs callz + "Super Again!"
       super(prefix, localName, value);
     end
   end

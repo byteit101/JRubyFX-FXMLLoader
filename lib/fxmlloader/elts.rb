@@ -49,12 +49,10 @@ class Element
         collection = false;
       end
     end
-    dputs callz + "Is it a collection? #{collection.inspect} <= #{@value.java_class}"
     return collection;
   end
 
   def add(element, prop_name=nil, rputs_elt=nil)
-    dputs callz + "about to add #{element} to #{value.to_java}"
     # If value is a list, add element to it; otherwise, get the value
     # of the default property, which is assumed to be a list and add
     # to that (coerce to the appropriate type)
@@ -100,32 +98,17 @@ class Element
   end
 
   def updateValue(value)
-    dputs callz + "Updating value from #{@value} to #{value.class}"
     @value = value;
     @valueAdapter = nil;
   end
 
   def isTyped()
-    dputs callz + "checking if typed"
-    dp @value.class
-    dp @value
-    q =  !(@value.java_kind_of? Java::java.util.Map or @value.is_a? Hash  );
-    dputs callz + "type result: #{q.inspect}"
-    q
+    !(@value.java_kind_of? Java::java.util.Map or @value.is_a? Hash  )
   end
 
   def getValueAdapter()
     if (@valueAdapter == nil)
-      dputs callz + "trying to get itqq"
-      dprint callz
-      dprint @value
-      dputs @value.class
-      dputs caller
-      if @value.class.to_s == "Java::JavafxFxml::ObjectBuilder"
-        dputs caller
-      end
       @valueAdapter = RubyWrapperBeanAdapter.for(@value)
-      dputs callz + "got"
     end
     return @valueAdapter;
   end
@@ -172,7 +155,6 @@ class Element
         if (@loadListener != nil)
           @loadListener.readEventHandlerAttribute(localName, value);
         end
-        dputs callz + "found eventHandler prefix #{prefix}, #{localName}, #{value}"
         eventHandlerAttributes <<(Attribute.new(localName, nil, value));
       else
         i = localName.rindex('.');
@@ -183,15 +165,12 @@ class Element
             @loadListener.readPropertyAttribute(localName, nil, value);
           end
 
-          dputs callz + "found property attrib #{prefix}, #{localName}, #{value}"
           instancePropertyAttributes << (Attribute.new(localName, nil, value));
         else
           # The attribute represents a static property
           name = localName[(i + 1)..-1];
           sourceType = parentLoader.getType(localName[0, i]);
 
-          dputs callz + "found static property #{prefix}, #{localName}, #{value}"
-          dputs callz + "and its #{sourceType}, #{staticLoad}"
           if (sourceType != nil)
             if (@loadListener != nil)
               @loadListener.readPropertyAttribute(name, sourceType, value);
@@ -217,7 +196,6 @@ class Element
   def processPropertyAttribute(attribute)
     value = attribute.value;
     if (isBindingExpression(value))
-      dputs callz  + "is a binding !"
       # Resolve the expression
 
       if (attribute.sourceType != nil)
@@ -237,37 +215,26 @@ class Element
       value = value[2..-2]    # TODO: BINDING_EXPRESSION_PREFIX == ${
       #value.length() - 1];
       # TODO: this only works for 7, not 8
-      dputs "getting expression value of '#{value}' with #{parentLoader.namespace}"
       expression = Expression.valueOf(value);
-      dputs callz + "got the expression as '#{expression}'"
-      dp expression
       # Create the binding
       targetAdapter = RubyWrapperBeanAdapter.new(@value);
-      dputs callz + "target adapter is #{targetAdapter} from #{value}"
       propertyModel = targetAdapter.getPropertyModel(attribute.name).to_java
       type = targetAdapter.getType(attribute.name);
-      dputs callz + "prop model is #{propertyModel.inspect} and type is #{type.inspect}"
       if (propertyModel.is_a? Property)
-        dputs callz + "checking out value using #{parentLoader.namespace}"
         rputs @value, "#{attribute.name}Property.bind(RRExpressionValue.new(__local_namespace, Java::org.jruby.jfx8.Expression.valueOf(#{value.inspect}), Java::#{type.name.gsub(/[\$\.]/, "::")}.java_class))"
         #expression.value_property.addListener(JRExpressionTargetMapping.new(expression, getProperties(), Expression.split(value)));
         ( propertyModel).bind(RRExpressionValue.new(parentLoader.namespace, expression, type));
-        dputs callz + "bound!"
       end
     elsif (isBidirectionalBindingExpression(value))
       raise UnsupportedOperationException.new("This feature is not currently enabled.");
     else
-      dputs callz + "processing 3 for #{attribute.sourceType}, #{attribute.name}, #{value}"
       processValue3(attribute.sourceType, attribute.name, value);
     end
   end
 
   def isBindingExpression(aValue)
-    dputs callz + "checking if '#{aValue}' is a binding prefix..."
     # TODO: BINDING_EXPRESSION_PREFIX == ${
-    q =  aValue.start_with?("${") && aValue.end_with?(FXL::BINDING_EXPRESSION_SUFFIX);
-    dputs callz + "it is? #{q.inspect}"
-    q
+    aValue.start_with?("${") && aValue.end_with?(FXL::BINDING_EXPRESSION_SUFFIX);
   end
 
   def isBidirectionalBindingExpression(aValue)
@@ -280,7 +247,6 @@ class Element
     processed = false;
     #process list or array first
     if (sourceType == nil && isTyped())
-      dputs callz + "getting value adptr"
       lvalueAdapter = getValueAdapter();
       type = lvalueAdapter.getType(propertyName);
 
@@ -291,7 +257,6 @@ class Element
         dp caller
         raise("Property \"" + propertyName          + "\" does not exist" + " or is read-only.");
       end
-      dputs "checking assignable"
       if (List.java_class.assignable_from?(type) && lvalueAdapter.read_only?(propertyName))
         populateListFromString(lvalueAdapter, propertyName, aValue);
         processed = true;
@@ -300,11 +265,8 @@ class Element
         processed = true;
       end
     end
-    dputs callz + "276"
     if (!processed)
-      dputs callz + "Must appky it"
       applyProperty(propertyName, sourceType, resolvePrefixedValue(aValue));
-      dputs callz + "280"
       processed = true;
     end
     return processed;
@@ -380,10 +342,8 @@ class Element
         # The attribute value is nil
         return nil;
       end
-      dputs callz + "Getting expression '#{aValue}'"
       # remove all nils, them add one in at the end so [0] returns nil if empty
       q = (KeyPath.parse(aValue).map{|i|parentLoader.namespace[i]} - [nil] + [nil])[0]
-      dputs callz + "Parsed Expression! #{q};;;;#{q.inspect}"
       return q
     end
     return aValue;
@@ -450,7 +410,6 @@ class Element
   end
 
   def applyProperty(name,  sourceType, value)
-    dputs callz + " Source type, name, value are (#{sourceType}, #{name}, #{value})"
     if (sourceType == nil)
       getProperties[name] = value
     else
@@ -488,7 +447,6 @@ class Element
           if (attrValue.length() == 0)
             raise LoadException.new("Missing expression reference.");
           end
-          dputs callz + "exprValue!' #{attrValue}'"
           expression = Expression.get(@namespace, KeyPath.parse(attrValue));
           if (expression.is_a? EventHandler)
             eventHandler = expression;
@@ -565,7 +523,7 @@ class EventHandlerWrapper
         @ctrl.send(@funcName, eventArgs)
       end
     else
-      dputs "Warning: method #{@funcName} was not found on controller #{@ctrl}"
+      puts "Warning: method #{@funcName} was not found on controller #{@ctrl}"
     end
   end
 end

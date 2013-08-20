@@ -271,14 +271,6 @@ class FxmlLoader
     @location = url
     @builderFactory = buildFactory || JavaFXBuilderFactory.new
     @template = false
-    if resourcs
-      dputs "WHOA WHOAT!!!! resources"
-      dp resourcs
-    end
-    if loaders
-      dputs "WHOA WHOAT!!!! loaders"
-      dp loaders
-    end
     @namespace = FXCollections.observableHashMap()
     self.controller = ctrlr
     @packages = []
@@ -298,7 +290,6 @@ class FxmlLoader
 
   # either :no_jit, or a number above 0 representing the number of times before jitting a fxml file
   def load(jruby_exts = {jruby_ext: {}})
-    dp "This is the namespace", @namespace
     @jruby_ext = {jit: 0}.merge(jruby_exts[:jruby_ext])
     # TODO: actually open it properly
     unless jit_info = @@fxml_jit_info[file_path = @location.to_s]
@@ -349,31 +340,23 @@ class FxmlLoader
     # Parse the XML stream
 		begin
 			while @xmlStreamReader.hasNext()
-        dputs "......"
         event = @xmlStreamReader.next();
-        dputs "#{event} aout happened, dude"
 				case event
         when XMLStreamConstants::PROCESSING_INSTRUCTION
-          dputs "processing instr"
           processProcessingInstruction
         when XMLStreamConstants::COMMENT
-          dputs "processing comment"
           processComment
         when XMLStreamConstants::START_ELEMENT
-          dputs "processing start"
           processStartElement
         when XMLStreamConstants::END_ELEMENT
-          dputs "processing end"
           processEndElement
         when XMLStreamConstants::CHARACTERS
-          dputs "processing chars"
           processCharacters
         end
       end
 		rescue XMLStreamException => exception
 			raise Exception.new(exception)
     end
-    dputs "Saving stuff!!!!s"
     if @controller
       # TODO: initialize should be called here
       # Inject controller fields
@@ -381,11 +364,7 @@ class FxmlLoader
       @controller.instance_variable_set("@" + FXL::RESOURCES_KEY, @resources)
     end
     if $DEBUG_IT_FXML_RB
-      dputs  "-"*50
-      dputs "    JIT'ing code for  #{@location.to_s}:"
       code = "#{rsem_out}\n#{rget @root}"
-      dputs code
-      dputs  "-"*50
       jit_info.compile(code)
     end
     $RB_CMAPPER = {}
@@ -517,11 +496,6 @@ class FxmlLoader
           pppn = pppn.parent
         end
         prefixz = (" " * numz) + prefixz
-        dputs "#{prefixz}Creating new stuff"
-        dprint prefixz
-        dp localName
-        dprint prefixz
-        dp type
 
 				if type
 					if @loadListener
@@ -584,7 +558,6 @@ class FxmlLoader
   end
 
   def processEndElement()
-    dputs "ending!!!!!!!!"
 		@current.processEndElement();
 		if @loadListener
 			@loadListener.endElement(@current.value);

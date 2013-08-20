@@ -51,6 +51,8 @@ class FxmlJitInfo
       @file_name = @file_name.gsub(/^file\:/, '')
     elsif @file_name.start_with? "jar:"
       @no_write = true
+    elsif @file_name.start_with? "compoundjar:"
+      @no_write = true
     end
     @jit_settings = jit_settings
     @run_count = 0

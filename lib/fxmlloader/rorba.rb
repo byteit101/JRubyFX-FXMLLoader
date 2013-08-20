@@ -70,7 +70,6 @@ class RubyObjectWrapperBeanAdapter
   end
 
   def []=(key, value)
-    dputs "calling setterrorab"
     if (key == nil)
       raise "NULL PTR"
     end

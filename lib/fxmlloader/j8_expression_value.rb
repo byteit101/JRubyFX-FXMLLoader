@@ -34,7 +34,6 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
 
   def initialize(namespace, expression, type)
     super()
-    dputs "Initializing with #{namespace}, #{expression}, #{type}"
     if (namespace == nil)
       raise "NullPointerException.new();"
     end
@@ -63,7 +62,6 @@ class RRExpressionValue < Java::javafx.beans.value.ObservableValueBase
 
 
   def getValue()
-    dputs "gettng 8ev for #{self} on #{@expression}"
     return RubyWrapperBeanAdapter.coerce(@expression.evaluate(@namespace), @type);
   end
 
@@ -106,46 +104,88 @@ class KeyPathMonitor
   @namespace = nil;
 
 
+  class ListChangeImpl
+    include ListChangeListener
+
+    def initialize(this)
+      @this = this
+    end
+
+    def onChanged(change)
+      @this.list_changed(change)
+    end
+  end
+
+
+  class MapChangeImpl
+    include MapChangeListener
+
+    def initialize(this)
+      @this = this
+    end
+
+    def onChanged(change)
+      @this.map_changed(change)
+    end
+  end
+
+
+
+  class ChangeListenerImpl
+    include ChangeListener
+
+    def initialize(this)
+      @this = this
+    end
+
+    def changed(ov, old, new)
+      @this.normal_changed(ov, old, new)
+    end
+  end
 
   def initialize(this, keyPathIterator)
     @key = keyPathIterator.next();
     @this = this
 
 
-    @listChangeListener = ListChangeListener.impl do |name, change|
-      while (@change.next())
-        index = @key.to_i
-
-        if (index >= change.getFrom() && index < change.getTo())
-          @this.fireValueChangedEvent();
-          remonitor();
-        end
-      end
-    end
+    @listChangeListener = ListChangeImpl.new(self)
 
 
-    @mapChangeListener = MapChangeListener.impl do |name, change|
-      if (@key == (change.getKey()))
-        @this.fireValueChangedEvent();
-        remonitor();
-      end
-    end
+    @mapChangeListener = MapChangeImpl.new(self)
 
 
-    @propertyChangeListener = ChangeListener.impl do |name, observable, oldValue, newValue|
-      dputs "Normal property changed #{name}, #{observable}, #{oldValue}, #{newValue} for #{@key}"
-      if (@key == (observable.getName()))
-        dputs "FIRE!"
-
-        @this.fireValueChangedEvent();
-        remonitor();
-      end
-    end
+    @propertyChangeListener = ChangeListenerImpl.new(self)
 
     if (keyPathIterator.hasNext())
       @next = KeyPathMonitor.new(this, keyPathIterator);
     else
       @next = nil;
+    end
+  end
+
+  def list_changed(change)
+    while (change.next())
+      index = @key.to_i
+
+      if (index >= change.getFrom() && index < change.getTo())
+        @this.fireValueChangedEvent();
+        remonitor();
+      end
+    end
+  end
+
+  def map_changed(change)
+    if (@key == (change.getKey()))
+      @this.fireValueChangedEvent();
+      remonitor();
+    end
+  end
+
+  def normal_changed(observable, oldValue, newValue)
+    if (@key == (observable.getName()))
+
+      @this.fireValueChangedEvent();
+      remonitor();
     end
   end
 
@@ -171,7 +211,6 @@ class KeyPathMonitor
     else
       namespaceAdapter = RubyWrapperBeanAdapter.for(namespace);
       propertyModel = namespaceAdapter.getPropertyModel(@key).to_java
-      dputs "properyt model is now #{propertyModel}"
       if (propertyModel != nil)
         old_verbose = $VERBOSE
         begin

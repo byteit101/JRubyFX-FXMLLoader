@@ -108,7 +108,7 @@ class RubyWrapperBeanAdapter
   end
 
   def setter(key)
-    raise UnsupportedOperationException.new("Cannot determine type for property.") unless type = getType(key)
+    raise java.lang.UnsupportedOperationException.new("Cannot determine type for property #{key}.") unless type = getType(key)
     return getMethod(method_name(SET_PREFIX, key), type)
   end
 
@@ -136,9 +136,9 @@ class RubyWrapperBeanAdapter
     rescue NoMethodError => nme
       raise unless nme.name.to_s.end_with?(key)
       puts "failing on #{key}"
-      p @bean
-      p @bean.class
-      puts caller
+#      p @bean
+#      p @bean.class
+#      puts caller
       nil
     end
   end
@@ -215,36 +215,16 @@ class RubyWrapperBeanAdapter
     return coi
   end
 
-  def self.coerce( value,  type)
-    dputs "coercing..."
-    if (type == nil)
-      dputs "WHAT!"
-      raise "ArgumentError.new();"
-    end
-    if (value.class == Java::JavaObject)
-      dputs "de-objectifying it!!!!"
-      dp value.class
-      dp value.java_class
-      dp value.to_java
-      value = value.to_java
-    end
-
-    coercedValue = nil;
-    if (value == nil)
-      # Null values can only be coerced to nil
-      coercedValue = nil;
-    elsif type == java.lang.Object.java_class || (value.is_a?(EventHandlerWrapper) && type == Java.javafx.event.EventHandler.java_class) || (value.respond_to?(:java_class) && !value.is_a?(EventHandlerWrapper) && type.assignable_from?(value.java_class))
-      # Value doesn't require coercion
-      coercedValue = value;
-    elsif !value.respond_to?(:java_class) && !type.enum?
-      # its a ruby value
+  @@mapper = nil
+  def self.mapper
+    unless @@mapper
       dir = ->(x){x}
       to_x = ->(x){->(o){o.send(x)}}
       to_dbl = ->(x){java.lang.Double.valueOf(x.to_s)}
       to_bool = ->(x){java.lang.Boolean.valueOf(x.to_s)}
-      value_of = ->(x){type.ruby_class.valueOf(x.to_s)}
+      value_of = ->(x, type){type.ruby_class.valueOf(x.to_s)}
       # TODO: Java::double[].java_class.component_type
-      mapper = {
+      @@mapper = {
         [String, java.lang.String.java_class] => dir,
         [Fixnum, java.lang.Integer.java_class] => dir,
         [Float, java.lang.Double.java_class] => dir,
@@ -261,10 +241,36 @@ class RubyWrapperBeanAdapter
         [String, Java::java.lang.Object.java_class] => dir,
         [String, Java::double[].java_class] => ->(x){x.split(/[, ]+/).map(&:to_f)}
       }
+    end
+    @@mapper
+  end
+
+  def self.coerce( value,  type)
+    if (type == nil)
+      raise "ArgumentError.new();"
+    end
+    if (value.class == Java::JavaObject)
+      value = value.to_java
+    end
+
+    coercedValue = nil;
+    if (value == nil)
+      # Null values can only be coerced to nil
+      coercedValue = nil;
+    elsif type == java.lang.Object.java_class || (value.is_a?(EventHandlerWrapper) && type == Java.javafx.event.EventHandler.java_class) || (value.respond_to?(:java_class) && !value.is_a?(EventHandlerWrapper) && type.assignable_from?(value.java_class))
+      # Value doesn't require coercion
+      coercedValue = value;
+    elsif !value.respond_to?(:java_class) && !type.enum?
+      # its a ruby value
+
       if mapper[[value.class, type]]
-        coercedValue = mapper[[value.class, type]].call(value)
+        coercedValue = mapper[[value.class, type]]
+        if coercedValue.arity == 1
+          coercedValue = coercedValue.call(value)
+        else
+          coercedValue = coercedValue.call(value, type)
+        end
       else
-        dputs "!! Non-normal RUBY coerce (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}])"
         raise "Unknown Coercion map: (#{value}, #{type}) (#{value.inspect}, [#{value.class}, #{type.inspect}]; Please file a bug on this."
       end
       # Ruby String :D
@@ -280,122 +286,8 @@ class RubyWrapperBeanAdapter
       dputs "COnverting url to string"
       coercedValue = value.to_s
     else
-      dputs "!! Non-normal coerce (#{value}, #{type}) (#{value.inspect}, #{type.inspect})"
-      if (type == java.lang.Boolean.java_class || type == Boolean.TYPE)
-        coercedValue = Boolean.valueOf(value.toString());
-      elsif (type == Character.java_class            || type == Character.TYPE)
-        coercedValue = value.toString().charAt(0);
-      elsif (type == Byte.java_class            || type == Byte.TYPE)
-        if (value.is_a? Number)
-          coercedValue = (value).byteValue();
-        else
-          coercedValue = Byte.valueOf(value.toString());
-        end
-      elsif (type == Short.java_class            || type == Short.TYPE)
-        if (value.is_a? Number)
-          coercedValue = (value).shortValue();
-        else
-          coercedValue = Short.valueOf(value.toString());
-        end
-      elsif (type == Integer.java_class            || type == Integer.TYPE)
-        if (value.is_a? Number)
-          coercedValue = (value).intValue();
-        else
-          coercedValue = Integer.valueOf(value.toString());
-        end
-      elsif (type == Long.java_class            || type == Long.TYPE)
-        if (value.is_a? Number)
-          coercedValue = (value).longValue();
-        else
-          coercedValue = Long.valueOf(value.toString());
-        end
-      elsif (type == BigInteger.java_class)
-        if (value.is_a? Number)
-          coercedValue = BigInteger.valueOf((value).longValue());
-        else
-          coercedValue = BigInteger.new(value.toString());
-        end
-      elsif (type == Float.java_class            || type == Float.TYPE)
-        if (value.is_a? Number)
-          coercedValue = (value).floatValue();
-        else
-          coercedValue = Float.valueOf(value.toString());
-        end
-      elsif (type == Double.java_class            || type == Double.TYPE)
-        if (value.is_a? Number)
-          coercedValue = (value).doubleValue();
-        else
-          coercedValue = Double.valueOf(value.toString());
-        end
-      elsif (type == Number.java_class)
-        number = value.toString();
-        if (number.contains("."))
-          coercedValue = Double.valueOf(number);
-        else
-          coercedValue = Long.valueOf(number);
-        end
-      elsif (type == BigDecimal.java_class)
-        if (value.is_a? Number)
-          coercedValue = BigDecimal.valueOf((value).doubleValue());
-        else
-          coercedValue = BigDecimal.new(value.toString());
-        end
-      elsif (type == Class.java_class)
-        begin
-          ReflectUtil.checkPackageAccess(value.toString());
-          coercedValue = Class.forName(
-            value.to_s,
-            false,
-            JRuby.runtime.get_class_loader);
-        rescue ClassNotFoundException => exception
-          raise Exception.new(exception);
-        end
-      else
-        dputs "elsee"
-        valueType = value.java_class();
-        valueOfMethod = nil;
-
-        while (valueOfMethod == nil                && valueType != nil)
-          begin
-            dputs "checking access"
-            ReflectUtil.checkPackageAccess(type);
-            valueOfMethod = type.declared_method(VALUE_OF_METHOD_NAME, valueType);
-          rescue NoSuchMethodException => exception
-            # No-op
-          end
-
-          if (valueOfMethod == nil)
-            valueType = valueType.superclass();
-          end
-        end
-
-        if (valueOfMethod == nil)
-          raise IllegalArgumentException.new("Unable to coerce " + value + " to " + type + ".");
-        end
-
-        if type.isEnum()                && value.is_a?(String) && value[0] == value[0].downcase
-          value = RubyWrapperBeansAdapter.toUpcase value;
-        end
-
-        begin
-          coercedValue = MethodUtil.invoke(valueOfMethod, nil, [ value ]);
-        rescue IllegalAccessException => exception
-          dputs "EAI1"
-          dp exception
-          raise "RuntimeException.new(exception);"
-        rescue InvocationTargetException => exception
-          dputs "ETI1"
-          dp exception
-          raise "RuntimeException.new(exception);"
-        rescue SecurityException => exception
-          dputs "SE1"
-          dp exception
-          raise "RuntimeException.new(exception);"
-        end
-      end
+      raise "!! Non-normal coerce (#{value}, #{type}) (#{value.inspect}, #{type.inspect})"
     end
-    dputs "Coerced #{value.class} into a #{coercedValue.class} for #{type}"
-    dp value, coercedValue
     return coercedValue;
   end
 
@@ -464,7 +356,6 @@ class RubyWrapperBeanAdapter
     elsif target.is_a? String
       targetType = java.lang.String.java_class
     else
-      dp target, sourceType, key, value
       raise "Shoots!"
     end
 
@@ -477,7 +368,6 @@ class RubyWrapperBeanAdapter
       elsif value.is_a? String
         valueClass = java.lang.String.java_class
       else
-        dp target, sourceType, key, value
         raise "Shoots TWICE!"
       end
       setterMethod = getStaticSetterMethod(sourceType, key, valueClass, targetType);
@@ -572,8 +462,6 @@ class RubyWrapperBeanAdapter
     if (itemType.is_a? ParameterizedType)
       itemType = (itemType).getRawType();
     end
-    dputs "Listem item type is for "
-    dp listType, itemType
     return itemType;
   end
 
@@ -601,41 +489,26 @@ class RubyWrapperBeanAdapter
     itemType = nil;
 
     parentType = listType;
-    dputs "searching for generic #{listType}"
     while (parentType != nil)
-      dputs "Still not nill"
-      dp parentType
       if (parentType.is_a? ParameterizedType)
-        dputs "Parametratized type!"
         parameterizedType = parentType;
         rawType = parameterizedType.getRawType();
-        dp rawType, parameterizedType
         if (List.java_class.assignable_from?(rawType))
           itemType = parameterizedType.getActualTypeArguments()[0];
-          dputs "OOOOOHHH item type is #{itemType}"
-          dp itemType
         end
 
         break;
       end
 
       classType = parentType;
-      dputs "checinhg generic interfaces"
       genericInterfaces = classType.generic_interfaces();
 
       genericInterfaces.each do |genericInterface|
-        dputs "serarcing ingeraface"
-        dp genericInterface
         if (genericInterface.is_a? ParameterizedType)
           parameterizedType = genericInterface;
           interfaceType = parameterizedType.getRawType();
-          dputs "checking"
-          dp parameterizedType, interfaceType
           if (List.java_class.assignable_from?(interfaceType.java_class)) || (List.java_class.assignable_from?(interfaceType.java_object))
             itemType = parameterizedType.getActualTypeArguments()[0];
-            dputs "found it at "
-            dp parameterizedType, interfaceType, itemType
-            dp itemType.bounds
             break;
           end
         end
@@ -649,8 +522,6 @@ class RubyWrapperBeanAdapter
     end
 
     if (itemType != nil && itemType.is_a?(java.lang.reflect.TypeVariable))
-      dputs 'aww shucks'
-      dp itemType
       itemType = Java::java.lang.Object.java_class;
     end
 

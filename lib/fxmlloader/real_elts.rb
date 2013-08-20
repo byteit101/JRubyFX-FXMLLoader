@@ -56,14 +56,12 @@ class InstanceDeclarationElement < ValueElement
 
   def initialize(current, xmlStreamReader, loadListener, parentLoader, type)
     super(current, xmlStreamReader, loadListener, parentLoader)
-    dputs "new instances! #{type}"
     @type = type;
     @constant = nil;
     @factory = nil;
   end
 
   def processAttribute( prefix,  localName,  value)
-    dputs callz + "Processing #{prefix} for #{localName} on #{type} value: #{value}"
     if (prefix != nil				&& prefix == (FXL::FX_NAMESPACE_PREFIX))
       if (localName == (FXL::FX_VALUE_ATTRIBUTE))
         @value = value;
@@ -72,18 +70,15 @@ class InstanceDeclarationElement < ValueElement
       elsif (localName == (FXL::FX_FACTORY_ATTRIBUTE))
         @factory = value;
       else
-        dputs callz + "SUPER!"
         super(prefix, localName, value);
       end
     else
-      dputs callz + "SUPER2!"
       super(prefix, localName, value);
     end
   end
 
   def constructValue()
     value = nil
-    dputs callz  + "building new object when #{@value.inspect}, #{constant.inspect}, #{factory.inspect}"
     if (@value != nil)
       value = RubyWrapperBeanAdapter.coerce(@value, type);
     elsif (constant != nil)
@@ -105,7 +100,6 @@ class InstanceDeclarationElement < ValueElement
       end
     else
       value = (parentLoader.builderFactory == nil) ? nil : parentLoader.builderFactory.getBuilder(type);
-      dputs callz + "now using #{value.class}"
       if (value.is_a? Builder or (value.respond_to?(:java_object) && value.java_object.is_a?(Builder)))
         begin
           value.size
@@ -117,22 +111,15 @@ class InstanceDeclarationElement < ValueElement
       end
       if (value == nil)
         begin
-          dputs callz + "attemping it (#{type} => #{type.inspect})"
           #TODO: does this work?
           value = type.ruby_class.new
-          dputs callz + "got taaatempt"
-          dprint callz
-          dp value
         rescue InstantiationException => exception
           raise LoadException.new(exception);
         rescue IllegalAccessException => exception
           raise LoadException.new(exception);
         end
       else
-
-        dputs value.size
-        dputs callz + "parent loader is #{parentLoader.builderFactory} and got #{value} for #{type} (#{value.inspect} #{type.inspect}, #{parentLoader.builderFactory.inspect})"
-      end
+     end
     end
     if factory
       rputs value, "build(FactoryBuilderBuilder, #{type.ruby_class}, #{factory.inspect}) do"
@@ -297,14 +284,11 @@ class ReferenceElement < ValueElement
   @source = nil;
 
   def processAttribute(prefix, localName, value)
-    dputs callz + "processing attrib"
-    dp prefix, localName, value
     if (prefix == nil)
       if (localName == (FXL::REFERENCE_SOURCE_ATTRIBUTE))
         if (loadListener != nil)
           loadListener.readInternalAttribute(localName, value);
         end
-        dputs callz + "SAVING SOURCES"
         @source = value;
       else
         super(prefix, localName, value);
@@ -455,10 +439,6 @@ class PropertyElement < Element
     @sourceType = nil
     @readOnly = nil
     super(current, xmlStreamReader, loadListener, parentLoader)
-    dputs (callz) + "Property Elt"
-    dputs callz + name
-    dprint callz
-    dp sourceType
     if (parent == nil)
       raise LoadException.new("Invalid root element.");
     end
@@ -478,10 +458,8 @@ class PropertyElement < Element
 
       parentProperties = parent.getProperties();
       if (parent.isTyped())
-        dputs (callz) +"it be typed"
         @readOnly = parent.getValueAdapter().read_only?(name);
       else
-        dputs (callz) +"it be chedrk"
         # If the map already defines a value for the property, assume
         # that it is read-only
         @readOnly = parentProperties.has_key?(name);
@@ -492,12 +470,9 @@ class PropertyElement < Element
         if (value == nil)
           raise LoadException.new("Invalid property.");
         end
-        dputs (callz) +"saving property #{name} => #{value}"
         updateValue(value);
       end
-      dputs (callz) +"doneish"
     else
-      dputs (callz) +"ITS READ OHLY"
       # The element represents a static property
       @readOnly = false;
     end
@@ -509,15 +484,10 @@ class PropertyElement < Element
 
   def add( element)
     @pushd = true
-    dputs ( callz) +"Adding #{element} to ===> #{name}"
-    dprint callz
-    dp element
-    dp element.class
     rp = nil
     # Coerce the element to the list item type
     if (parent.isTyped())
       listType = parent.getValueAdapter().getGenericType(name);
-      dputs callz + "Typed and list type is #{listType}"
       lit = RubyWrapperBeanAdapter.getListItemType(listType)
       # FIXME: HACK!
       if element.class.inspect == "Java::JavaNet::URL"
@@ -533,7 +503,6 @@ class PropertyElement < Element
 
   def set( value)
     @pushd = true
-    dputs (callz) +"setting prope value #{name} ==> #{value}"
     # Update the value
     updateValue(value);
 
@@ -552,7 +521,6 @@ class PropertyElement < Element
   end
 
   def processAttribute( prefix,  localName,  value)
-    dputs (callz) +"processing #{prefix}, #{localName}, #{value} for #{name}"
     if (!readOnly)
       raise LoadException.new("Attributes are not supported for writable property elements.");
     end
@@ -562,7 +530,6 @@ class PropertyElement < Element
 
   def processEndElement()
     super();
-    dputs (callz) +"ENDENDLT "
     if (readOnly)
       processInstancePropertyAttributes();
       processEventHandlerAttributes();
@@ -575,7 +542,6 @@ class PropertyElement < Element
   def processCharacters()
     if (!readOnly)
       text = xmlStreamReader.getText();
-      dputs (callz) +"whitlespa"
       #TODO: normal regexes
       text = extraneousWhitespacePattern.matcher(text).replaceAll(" ");
 
@@ -635,7 +601,6 @@ class ScriptElement < Element
       if (i == nil)
         raise ("Cannot determine type of script \""											+ @source + "\".");
       end
-      dputs callz + "in the script bowels"
       extension = @source[(i + 1)..-1];
       scriptEngine = nil
       #TODO: use JRUBY stuff
@@ -685,13 +650,11 @@ class ScriptElement < Element
 
   def processEndElement()
     super();
-    dputs callz + "end elet of scripter, #{value}, #{parentLoader.staticLoad}"
     if (value != nil && !parentLoader.staticLoad)
       # Evaluate the script
       begin
-        dputs callz + "Evaling the script!"
         rputs nil, "__local_sem_lang_inst_#{rget_sem(parentLoader.scriptEngine)}.eval(#{value.to_s.inspect})"
-        dp parentLoader.scriptEngine.eval( value.to_s);
+        parentLoader.scriptEngine.eval( value.to_s);
       rescue ScriptException => exception
         STDERR.puts (exception.getMessage());
       end
@@ -706,12 +669,10 @@ class ScriptElement < Element
     if (parentLoader.scriptEngine == nil && !parentLoader.staticLoad)
       raise LoadException.new("Page language not specified.");
     end
-    dputs callz + "updating srcpt values!"
     updateValue(xmlStreamReader.getText());
   end
 
   def processAttribute(prefix, localName, value)
-    dputz callz + "processing Attribbs for scripts #{prefix}, #{localName}, #{value}"
     if (prefix == nil        && localName == (FXL::SCRIPT_SOURCE_ATTRIBUTE))
       if (loadListener != nil)
         loadListener.readInternalAttribute(localName, value);
