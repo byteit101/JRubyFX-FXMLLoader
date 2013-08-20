@@ -228,7 +228,7 @@ class ValueElement < Element
         if (!staticLoad)
           type = nil
           begin
-            type = parentLoader.constantize(value)
+            type = value.constantize_by
           rescue ClassNotFoundException => exception
             raise LoadException.new(exception);
           end
