@@ -663,8 +663,16 @@ class FxmlLoader
 
 	def loadTypeForPackage(packageName, className=nil)
 		packageName = (packageName + "." + className.gsub('.', '$')) if className
-    #TODO: fix for ruby stuff
-		return Java.java.lang.Class::forName(packageName, true, FXL::default_class_loader);
+    begin
+      return Java.java.lang.Class::forName(packageName, true, FXL::default_class_loader);
+    rescue ClassNotFoundException => ex
+      # probably ruby class
+      begin
+        return packageName.constantize_by(".")
+      rescue
+        raise ex # nope, not our issue anymore
+      end
+    end
   end
   def compareJFXVersions(rtVer, nsVer)
 
