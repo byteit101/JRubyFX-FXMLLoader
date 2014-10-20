@@ -305,12 +305,15 @@ class FxmlLoader
 
     @script_engine = nil
 
-    $DEBUG_IT_FXML_RB = jit_info.should_jit?
+		difx = $DEBUG_IT_FXML_RB # TODO: hack to make this somewhat better at recursion
     # if we have it cached, use the jitted method
     if jit_info.compiled?
       begin
         return :dont_load if @jruby_ext[:dont_load]
-        return jit_info.__build_via_jit(@controller, @namespace, @jruby_ext)
+				$DEBUG_IT_FXML_RB = jit_info.should_jit?
+        res = jit_info.__build_via_jit(@controller, @namespace, @jruby_ext)
+				$DEBUG_IT_FXML_RB = difx # restore
+				return res
       rescue Exception, java.lang.Throwable
         puts "JIT compiled method for #{@location.to_s} FAILED with error:"
         puts $!
@@ -320,6 +323,8 @@ class FxmlLoader
         jit_info.decompile
       end
     end
+		
+    $DEBUG_IT_FXML_RB = jit_info.should_jit?
 
     begin
       xmlInputFactory = XMLInputFactory.newFactory
@@ -372,6 +377,7 @@ class FxmlLoader
     $RB_SCRIPT_ENGINE_MAPPINGS = {}
 
     @xmlStreamReader = nil
+		$DEBUG_IT_FXML_RB = difx # restore
     return @root
   end
 
