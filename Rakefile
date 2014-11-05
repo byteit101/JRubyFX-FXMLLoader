@@ -45,7 +45,7 @@ task :gem => :jar
 
 spec = Gem::Specification.new do |s|
   s.name = 'jrubyfx-fxmlloader'
-  s.version = '0.3'
+  s.version = '0.4'
   s.platform    = 'java'
   s.has_rdoc = true
   s.extra_rdoc_files = ['README', 'LICENSE']
@@ -59,6 +59,7 @@ spec = Gem::Specification.new do |s|
   s.files = %w(LICENSE README Rakefile lib/FXMLLoader-j8.jar) + Dir.glob("{bin,lib,spec}/**/*")
   s.require_path = "lib"
   s.bindir = "bin"
+  s.license = "GPL-2.0-with-classpath-exception"
 end
 
 Gem::PackageTask.new(spec) do |p|
