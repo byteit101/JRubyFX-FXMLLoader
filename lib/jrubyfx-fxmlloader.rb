@@ -219,7 +219,7 @@ class SecretHashCompararator
 end
 
 class FxmlBuilderBuilder # the builder builder (builds builders)
-  @@bf = Java::javafx.fxml.JavaFXBuilderFactory.new
+  @@bf = Java::javafx.fxml.JavaFXBuilderFactory.new(JRuby.runtime.jruby_class_loader)
   def self.new(arg_map, builder_type)
     builder = @@bf.getBuilder(builder_type)
     arg_map.each do |k, v|
@@ -265,7 +265,7 @@ class FxmlLoader
   @@fxml_jit_info = {}
   def initialize(url=nil, ctrlr=nil, resourcs=nil, buildFactory=nil, charset=nil, loaders=nil)
     @location = url
-    @builderFactory = buildFactory || JavaFXBuilderFactory.new
+    @builderFactory = buildFactory || JavaFXBuilderFactory.new(JRuby.runtime.jruby_class_loader)
     @template = false
     @namespace = FXCollections.observableHashMap()
     self.controller = ctrlr
@@ -666,13 +666,13 @@ class FxmlLoader
 	def loadTypeForPackage(packageName, className=nil)
 		packageName = (packageName + "." + className.gsub('.', '$')) if className
     begin
-      return Java.java.lang.Class::forName(packageName, true, FXL::default_class_loader);
-    rescue ClassNotFoundException => ex
+      return JavaUtilities.get_proxy_class(packageName).java_class.to_java
+    rescue NameError => ex
       # probably ruby class
       begin
         return packageName.constantize_by(".")
       rescue
-        raise ex # nope, not our issue anymore
+        raise ClassNotFoundException.new(packageName) # nope, not our issue anymore
       end
     end
   end
