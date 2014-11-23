@@ -539,7 +539,10 @@ class ScriptEventHandler
   def handle(event)
     # Don't pollute the page namespace with values defined in the script
     engineBindings = @scriptEngine.getBindings(ScriptContext::ENGINE_SCOPE);
-    localBindings = @scriptEngine.createBindings();
+    #localBindings = @scriptEngine.createBindings(); # TODO: this causes errors with nashorn in jdk8 by creating a different kind of 
+    # script object that doesn't respect the magic nashorn.global object
+    localBindings = Java::JavaxScript::SimpleBindings.new
+    localBindings.put_all(engineBindings)
     localBindings.put(FXL::EVENT_KEY, event);
     @scriptEngine.setBindings(localBindings, ScriptContext::ENGINE_SCOPE);
 
