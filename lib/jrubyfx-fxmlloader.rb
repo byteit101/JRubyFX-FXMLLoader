@@ -36,7 +36,7 @@ end
 java_import 'javafx.fxml.JavaFXBuilderFactory'
 java_import 'java.lang.InstantiationException', 'java.lang.IllegalAccessException'
 
-java_import *%w[com.sun.javafx.Logging
+java_import *%w[
 java.io.IOException
 java.io.InputStream
 java.io.InputStreamReader
