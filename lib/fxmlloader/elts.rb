@@ -155,7 +155,7 @@ class Element
         if (@loadListener != nil)
           @loadListener.readEventHandlerAttribute(localName, value);
         end
-        eventHandlerAttributes <<(Attribute.new(localName, nil, value));
+        eventHandlerAttributes << (Attribute.new(localName, nil, value));
       else
         i = localName.rindex('.');
 
