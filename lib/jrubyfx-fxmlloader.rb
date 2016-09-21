@@ -36,8 +36,7 @@ end
 java_import 'javafx.fxml.JavaFXBuilderFactory'
 java_import 'java.lang.InstantiationException', 'java.lang.IllegalAccessException'
 
-java_import *%w[
-java.io.IOException
+java_import *%w[java.io.IOException
 java.io.InputStream
 java.io.InputStreamReader
 java.lang.ClassNotFoundException
@@ -584,7 +583,7 @@ class FxmlLoader
 		begin
 			loadType(name, true);
 		rescue ClassNotFoundException => exception
-			raise LoadException.new(exception);
+			raise javafx.fxml.LoadException.new(exception)
 		end
 	end
 
@@ -629,13 +628,11 @@ class FxmlLoader
 	end
 
 	def loadType(name, cache)
-		i = name.index('.');
-		n = name.length;
-		while (i &&
-          i < n &&
-          name[i + 1] == name[i + 1].downcase)
-			i = name.index('.', i + 1);
-		end
+i = name.index('.')
+i = name.index('.', i + 1) while i && i < name.length && name[i + 1] == name[i + 1].downcase
+
+
+
 
 		if (i == nil || i == n)
 			raise ClassNotFoundException.new();
