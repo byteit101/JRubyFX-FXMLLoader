@@ -4,8 +4,7 @@ require_relative './elts'
 # Support OpenJFX, requires JRuby version that supports OpenJFX
 # OpenJFX no longer includes javafx.geometry.InsetsBuilder
 # Tested on OpenJFX version 11.0.2, 14.01 & 15 ea on 15th May 2020
-#class StupidFixTODOInsets < Java::javafx::geometry::InsetsBuilder
-class StupidFixTODOInsets #< Java::javafx::geometry::InsetsBuilder
+class StupidFixTODOInsets 
   def initialize()
     super
   end
